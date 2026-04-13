@@ -19,7 +19,7 @@ import { PhotoCropperModal } from "@/components/ui/photo-cropper-modal";
 import { REGISTRATION_CONFIG } from "@/config/registration";
 import { cn } from "@/lib/utils";
 
-const reqStr = (msg: string) => z.string({ required_error: msg, invalid_type_error: msg }).min(1, msg);
+const reqStr = (msg: string) => z.string().min(1, msg);
 
 const vehicleSchema = z.object({
   brand: reqStr("Marca obrigatória").min(2, "Mínimo 2 caracteres"),
@@ -41,8 +41,8 @@ const formSchema = z.object({
   confirmPassword: reqStr("Confirmação de senha obrigatória").min(1, "Confirme sua senha"),
   needsParking: z.boolean().default(false),
   vehicles: z.array(vehicleSchema).max(3).optional(),
-  acceptTerms: z.boolean({ required_error: "Aceite obrigatório" }).refine((val) => val === true, "Aceite obrigatório para aprovação"),
-  acceptRules: z.boolean({ required_error: "Aceite obrigatório" }).refine((val) => val === true, "Aceite obrigatório para aprovação"),
+  acceptTerms: z.boolean().refine((val) => val === true, "Aceite obrigatório para aprovação"),
+  acceptRules: z.boolean().refine((val) => val === true, "Aceite obrigatório para aprovação"),
   notes: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
