@@ -1,0 +1,4 @@
+﻿src/modules/auth/presentation/components/login-form.tsx(4,25): error TS2307: Cannot find module 'react-hook-form' or its corresponding type declarations.
+src/modules/auth/presentation/components/login-form.tsx(6,29): error TS2307: Cannot find module '@hookform/resolvers/zod' or its corresponding type declarations.
+src/modules/auth/presentation/components/register-choice-dialog.tsx(65,24): error TS2322: Type '{ children: string | number | bigint | true | Iterable<ReactNode> | Promise<AwaitedReactNode> | Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & Props<unknown>'.
