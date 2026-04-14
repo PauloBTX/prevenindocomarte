@@ -32,9 +32,9 @@ jobs:
       - name: Prepare static pages artifact
         run: |
           mkdir -p out
-          cp -R .next/server/app/* out/
-          cp -R .next/server/pages/*.html out/ 2>/dev/null || true
           cp -R public/* out/ 2>/dev/null || true
+          cp .next/server/app/*.html out/ 2>/dev/null || true
+          cp -R .next/server/pages/*.html out/ 2>/dev/null || true
           mkdir -p out/_next
           cp -R .next/static out/_next/static
       - name: Upload artifact
