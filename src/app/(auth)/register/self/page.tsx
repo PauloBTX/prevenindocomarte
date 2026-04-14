@@ -264,7 +264,7 @@ export default function RegisterSelfPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const usesMedication = watch("usesMedication");
+
 
   const onSubmit = (data: FormValues) => {
     if (!docFile || !photoFile || !recordFile || !addressFile) {
