@@ -333,12 +333,18 @@ export default function RegisterDependentPage() {
   };
 
   const onSubmit = (data: FormValues) => {
-    if (!docFile || !photoFile || !schoolFile || !addressFile) {
-      setCurrentStep(6);
-      setUploadError("Por favor, envie todos os 4 documentos obrigatórios antes de aceitar os termos.");
+    const missingStudentDocs = !docFile || !photoFile || !schoolFile || !addressFile;
+    const missingGuardianDocs = guardianDocs.some(gd => !gd.file);
+
+    if (missingStudentDocs || missingGuardianDocs) {
+      if (missingStudentDocs) setCurrentStep(6);
+      else setCurrentStep(4);
+      
+      setUploadError("Por favor, envie todos os documentos obrigatórios antes de finalizar.");
+      if (missingGuardianDocs) setRespUploadError("Por favor, envie o documento de todos os responsáveis.");
       return;
     }
-    console.log("Form data:", data, { docFile, photoFile, schoolFile, addressFile, respDocFile });
+    console.log("Form data:", data, { docFile, photoFile, schoolFile, addressFile, guardianDocs });
     setIsSuccess(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
