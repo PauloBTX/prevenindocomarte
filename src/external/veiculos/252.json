@@ -1,0 +1,42 @@
+{
+    "modelos": [
+        {
+            "codigo": 11747,
+            "nome": "5 Luxury 1.5 TB FWD"
+        },
+        {
+            "codigo": 11748,
+            "nome": "5 Prestige 1.5 TB FWD"
+        },
+        {
+            "codigo": 11749,
+            "nome": "7 Luxury 1.5 TB FWD"
+        },
+        {
+            "codigo": 11750,
+            "nome": "7 Prestige 1.5 TB FWD"
+        },
+        {
+            "codigo": 11756,
+            "nome": "E5 FWD (Elétrico)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-6",
+            "nome": "32000 Híbrido"
+        },
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2026-6",
+            "nome": "2026 Híbrido"
+        },
+        {
+            "codigo": "2026-4",
+            "nome": "2026 Elétrico"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "modelos": [
+        {
+            "codigo": 10921,
+            "nome": "EC31 Chassi  (Elétrico)"
+        },
+        {
+            "codigo": 10922,
+            "nome": "EC35 Furgão (Elétrico)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "2023-4",
+            "nome": "2023 Elétrico"
+        }
+    ]
+}

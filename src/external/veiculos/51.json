@@ -1,0 +1,18 @@
+{
+    "modelos": [
+        {
+            "codigo": 2096,
+            "nome": "SL-2 1.9"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "1992-1",
+            "nome": "1992 Gasolina"
+        },
+        {
+            "codigo": "1991-1",
+            "nome": "1991 Gasolina"
+        }
+    ]
+}

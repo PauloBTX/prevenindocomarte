@@ -1,0 +1,34 @@
+{
+    "modelos": [
+        {
+            "codigo": 11751,
+            "nome": "B10 (Elétrico)"
+        },
+        {
+            "codigo": 11752,
+            "nome": "C10 (Elétrico)"
+        },
+        {
+            "codigo": 11753,
+            "nome": "C10 (Híbrido)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-6",
+            "nome": "32000 Híbrido"
+        },
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2026-6",
+            "nome": "2026 Híbrido"
+        },
+        {
+            "codigo": "2026-4",
+            "nome": "2026 Elétrico"
+        }
+    ]
+}

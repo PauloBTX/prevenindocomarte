@@ -1,0 +1,34 @@
+{
+    "modelos": [
+        {
+            "codigo": 1952,
+            "nome": "Trans-AM 5.7 V8"
+        },
+        {
+            "codigo": 1953,
+            "nome": "Trans-Sport SE 3.1"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "1995-1",
+            "nome": "1995 Gasolina"
+        },
+        {
+            "codigo": "1994-1",
+            "nome": "1994 Gasolina"
+        },
+        {
+            "codigo": "1993-1",
+            "nome": "1993 Gasolina"
+        },
+        {
+            "codigo": "1992-1",
+            "nome": "1992 Gasolina"
+        },
+        {
+            "codigo": "1991-1",
+            "nome": "1991 Gasolina"
+        }
+    ]
+}

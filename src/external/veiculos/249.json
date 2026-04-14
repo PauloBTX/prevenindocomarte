@@ -1,0 +1,42 @@
+{
+    "modelos": [
+        {
+            "codigo": 11229,
+            "nome": "NEXTEM FN1000 BOX (Elétrico)"
+        },
+        {
+            "codigo": 11230,
+            "nome": "NEXTEM FN1000 CC (Elétrico)"
+        },
+        {
+            "codigo": 11231,
+            "nome": "NEXTEM FN1000 HIGH BOX (Elétrico)"
+        },
+        {
+            "codigo": 11232,
+            "nome": "NEXTEM FN1000 PickUp (Elétrico)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2026-4",
+            "nome": "2026 Elétrico"
+        },
+        {
+            "codigo": "2025-4",
+            "nome": "2025 Elétrico"
+        },
+        {
+            "codigo": "2024-4",
+            "nome": "2024 Elétrico"
+        },
+        {
+            "codigo": "2023-4",
+            "nome": "2023 Elétrico"
+        }
+    ]
+}

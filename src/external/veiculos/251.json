@@ -1,0 +1,22 @@
+{
+    "modelos": [
+        {
+            "codigo": 11452,
+            "nome": "7 Luxury 1.5 TB 16v Aut 5p (Híbrido)"
+        },
+        {
+            "codigo": 11453,
+            "nome": "7 Prestige1.5 TB 16v Aut  (Híbrido)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-6",
+            "nome": "32000 Híbrido"
+        },
+        {
+            "codigo": "2026-6",
+            "nome": "2026 Híbrido"
+        }
+    ]
+}

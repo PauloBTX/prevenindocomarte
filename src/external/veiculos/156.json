@@ -1,0 +1,414 @@
+{
+    "modelos": [
+        {
+            "codigo": 11533,
+            "nome": "Aceman E (Elétrico)"
+        },
+        {
+            "codigo": 11534,
+            "nome": "Aceman SE (Elétrico)"
+        },
+        {
+            "codigo": 6868,
+            "nome": "COOPER 1.5 Turbo 12V 3p Aut."
+        },
+        {
+            "codigo": 7162,
+            "nome": "COOPER 1.5 Turbo 12V 5p Aut."
+        },
+        {
+            "codigo": 4892,
+            "nome": "COOPER 1.6 Aut."
+        },
+        {
+            "codigo": 4893,
+            "nome": "COOPER 1.6 Mec."
+        },
+        {
+            "codigo": 8526,
+            "nome": "COOPER CABRIO 1.5 Turbo 12V Aut."
+        },
+        {
+            "codigo": 5074,
+            "nome": "COOPER CABRIO 1.6 Aut."
+        },
+        {
+            "codigo": 5595,
+            "nome": "COOPER CABRIO John Works 1.6  Mec."
+        },
+        {
+            "codigo": 6563,
+            "nome": "COOPER CABRIO John Works 1.6 Aut."
+        },
+        {
+            "codigo": 8549,
+            "nome": "COOPER CABRIO John Works 2.0 Aut."
+        },
+        {
+            "codigo": 5075,
+            "nome": "COOPER CABRIO S 1.6 Aut."
+        },
+        {
+            "codigo": 7720,
+            "nome": "COOPER CABRIO S 2.0 16V Aut."
+        },
+        {
+            "codigo": 6543,
+            "nome": "COOPER CABRIO S HIGHGATE 1.6 Aut."
+        },
+        {
+            "codigo": 5731,
+            "nome": "COOPER Clubman 1.6 Aut."
+        },
+        {
+            "codigo": 8926,
+            "nome": "COOPER Clubman John Work ALL4 2.0 Aut."
+        },
+        {
+            "codigo": 9981,
+            "nome": "COOPER COU. SE SHAD. ED. ALL4 1.5 (Híb.)"
+        },
+        {
+            "codigo": 11755,
+            "nome": "COOPER Country. John W. ALL4 Exclu. 2.0 TB. Aut."
+        },
+        {
+            "codigo": 6666,
+            "nome": "COOPER Country. John Works ALL4 1.6 Aut."
+        },
+        {
+            "codigo": 8131,
+            "nome": "COOPER Country. John Works ALL4 2.0 Aut."
+        },
+        {
+            "codigo": 11123,
+            "nome": "COOPER Country. SE ALL4 Excl. (Elétrico)"
+        },
+        {
+            "codigo": 11124,
+            "nome": "COOPER Country. SE ALL4 Top (Elétrico)"
+        },
+        {
+            "codigo": 7906,
+            "nome": "COOPER Countryman 1.5 Turbo Aut."
+        },
+        {
+            "codigo": 5501,
+            "nome": "COOPER Countryman 1.6 Aut."
+        },
+        {
+            "codigo": 11535,
+            "nome": "COOPER Countryman ALL4 2.0 Turbo Aut."
+        },
+        {
+            "codigo": 5502,
+            "nome": "COOPER Countryman S 1.6 Aut."
+        },
+        {
+            "codigo": 7907,
+            "nome": "COOPER Countryman S 2.0 Turbo Aut."
+        },
+        {
+            "codigo": 5472,
+            "nome": "COOPER Countryman S ALL4 1.6 Aut."
+        },
+        {
+            "codigo": 7908,
+            "nome": "COOPER Countryman S ALL4 2.0 Turbo Aut."
+        },
+        {
+            "codigo": 9982,
+            "nome": "COOPER Countryman S E ALL4 1.5  (Híb.)"
+        },
+        {
+            "codigo": 5687,
+            "nome": "COOPER COUPE 1.6 Aut."
+        },
+        {
+            "codigo": 11070,
+            "nome": "COOPER COUPE John Works 1.6"
+        },
+        {
+            "codigo": 5688,
+            "nome": "COOPER COUPE S 1.6 Aut."
+        },
+        {
+            "codigo": 11257,
+            "nome": "COOPER E 3p (Elétrico)"
+        },
+        {
+            "codigo": 6565,
+            "nome": "COOPER John Works 1.6 Aut."
+        },
+        {
+            "codigo": 5473,
+            "nome": "COOPER John Works 1.6 Mec."
+        },
+        {
+            "codigo": 7357,
+            "nome": "COOPER John Works 2.0 Turbo 3p Aut."
+        },
+        {
+            "codigo": 10750,
+            "nome": "COOPER John Works 25K Edit. 2.0 Turbo 3p"
+        },
+        {
+            "codigo": 11605,
+            "nome": "COOPER John Works Aceman E 5p "
+        },
+        {
+            "codigo": 11606,
+            "nome": "COOPER John Works E 3p "
+        },
+        {
+            "codigo": 9198,
+            "nome": "COOPER John Works GP3 2.0 Turbo 3p Aut."
+        },
+        {
+            "codigo": 10098,
+            "nome": "COOPER John.W.Pat.Moss 2.0 Turbo 3p Aut."
+        },
+        {
+            "codigo": 6492,
+            "nome": "COOPER PACEMAN S 1.6 16V 184cv Aut."
+        },
+        {
+            "codigo": 6643,
+            "nome": "COOPER PACEMAN S ALL4 1.6 16V Aut."
+        },
+        {
+            "codigo": 6701,
+            "nome": "COOPER PACEMAN S John Works ALL4 1.6 Aut"
+        },
+        {
+            "codigo": 6069,
+            "nome": "COOPER ROADSTER 1.6 Aut."
+        },
+        {
+            "codigo": 6566,
+            "nome": "COOPER ROADSTER John Works 1.6 Aut."
+        },
+        {
+            "codigo": 6070,
+            "nome": "COOPER ROADSTER S 1.6 Aut."
+        },
+        {
+            "codigo": 4894,
+            "nome": "COOPER S 1.6 Aut."
+        },
+        {
+            "codigo": 6869,
+            "nome": "COOPER S 2.0 Turbo 16v 3p Aut."
+        },
+        {
+            "codigo": 7123,
+            "nome": "COOPER S 2.0 Turbo 16V 3p Mec."
+        },
+        {
+            "codigo": 7163,
+            "nome": "COOPER S 2.0 Turbo 16V 5p Aut."
+        },
+        {
+            "codigo": 6592,
+            "nome": "COOPER S BAYSWATER 1.6 Aut."
+        },
+        {
+            "codigo": 4895,
+            "nome": "COOPER S Clubman 1.6 Aut."
+        },
+        {
+            "codigo": 7431,
+            "nome": "COOPER S Clubman 2.0 Aut."
+        },
+        {
+            "codigo": 11017,
+            "nome": "COOPER S Mayfield Edition 2.0 TB. 3p Aut"
+        },
+        {
+            "codigo": 7909,
+            "nome": "COOPER S SEVEN 2.0 TURBO 16V 3p Aut."
+        },
+        {
+            "codigo": 11258,
+            "nome": "COOPER SE 3p (Elétrico)"
+        },
+        {
+            "codigo": 9548,
+            "nome": "COOPER SE Exclusive 3p (Elétrico)"
+        },
+        {
+            "codigo": 10628,
+            "nome": "COOPER SE Multitone Edit. 3p (Elétrico)"
+        },
+        {
+            "codigo": 9983,
+            "nome": "COOPER SE Resolute Edition 3p (Elétrico)"
+        },
+        {
+            "codigo": 10161,
+            "nome": "COOPER SE Sport 3p (Elétrico)"
+        },
+        {
+            "codigo": 9549,
+            "nome": "COOPER SE Top 3p (Elétrico)"
+        },
+        {
+            "codigo": 9550,
+            "nome": "COOPER SE Top Collection 3p (Elétrico)"
+        },
+        {
+            "codigo": 8242,
+            "nome": "ONE 1.2 12V Turbo 2p Mec."
+        },
+        {
+            "codigo": 5596,
+            "nome": "ONE 1.6  Mec."
+        },
+        {
+            "codigo": 5732,
+            "nome": "ONE 1.6 Aut."
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-1",
+            "nome": "32000 Gasolina"
+        },
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2026-1",
+            "nome": "2026 Gasolina"
+        },
+        {
+            "codigo": "2026-4",
+            "nome": "2026 Elétrico"
+        },
+        {
+            "codigo": "2025-1",
+            "nome": "2025 Gasolina"
+        },
+        {
+            "codigo": "2025-4",
+            "nome": "2025 Elétrico"
+        },
+        {
+            "codigo": "2024-6",
+            "nome": "2024 Híbrido"
+        },
+        {
+            "codigo": "2024-1",
+            "nome": "2024 Gasolina"
+        },
+        {
+            "codigo": "2024-4",
+            "nome": "2024 Elétrico"
+        },
+        {
+            "codigo": "2023-6",
+            "nome": "2023 Híbrido"
+        },
+        {
+            "codigo": "2023-1",
+            "nome": "2023 Gasolina"
+        },
+        {
+            "codigo": "2023-4",
+            "nome": "2023 Elétrico"
+        },
+        {
+            "codigo": "2022-6",
+            "nome": "2022 Híbrido"
+        },
+        {
+            "codigo": "2022-1",
+            "nome": "2022 Gasolina"
+        },
+        {
+            "codigo": "2022-4",
+            "nome": "2022 Elétrico"
+        },
+        {
+            "codigo": "2021-6",
+            "nome": "2021 Híbrido"
+        },
+        {
+            "codigo": "2021-1",
+            "nome": "2021 Gasolina"
+        },
+        {
+            "codigo": "2020-6",
+            "nome": "2020 Híbrido"
+        },
+        {
+            "codigo": "2020-1",
+            "nome": "2020 Gasolina"
+        },
+        {
+            "codigo": "2019-6",
+            "nome": "2019 Híbrido"
+        },
+        {
+            "codigo": "2019-1",
+            "nome": "2019 Gasolina"
+        },
+        {
+            "codigo": "2018-1",
+            "nome": "2018 Gasolina"
+        },
+        {
+            "codigo": "2017-1",
+            "nome": "2017 Gasolina"
+        },
+        {
+            "codigo": "2016-1",
+            "nome": "2016 Gasolina"
+        },
+        {
+            "codigo": "2015-1",
+            "nome": "2015 Gasolina"
+        },
+        {
+            "codigo": "2014-1",
+            "nome": "2014 Gasolina"
+        },
+        {
+            "codigo": "2013-1",
+            "nome": "2013 Gasolina"
+        },
+        {
+            "codigo": "2012-1",
+            "nome": "2012 Gasolina"
+        },
+        {
+            "codigo": "2011-1",
+            "nome": "2011 Gasolina"
+        },
+        {
+            "codigo": "2010-1",
+            "nome": "2010 Gasolina"
+        },
+        {
+            "codigo": "2009-1",
+            "nome": "2009 Gasolina"
+        },
+        {
+            "codigo": "2008-1",
+            "nome": "2008 Gasolina"
+        },
+        {
+            "codigo": "2007-1",
+            "nome": "2007 Gasolina"
+        },
+        {
+            "codigo": "2006-1",
+            "nome": "2006 Gasolina"
+        },
+        {
+            "codigo": "2005-1",
+            "nome": "2005 Gasolina"
+        }
+    ]
+}

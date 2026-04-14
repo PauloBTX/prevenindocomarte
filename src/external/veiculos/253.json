@@ -1,0 +1,38 @@
+{
+    "modelos": [
+        {
+            "codigo": 11624,
+            "nome": "001 Flagship AWD (Elétrico)"
+        },
+        {
+            "codigo": 11625,
+            "nome": "001 Premium AWD (Elétrico)"
+        },
+        {
+            "codigo": 11630,
+            "nome": "7X Flagship AWD"
+        },
+        {
+            "codigo": 11656,
+            "nome": "X Flagship AWD (Elétrico)"
+        },
+        {
+            "codigo": 11472,
+            "nome": "X Premium (Elétrico)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2026-4",
+            "nome": "2026 Elétrico"
+        },
+        {
+            "codigo": "2025-4",
+            "nome": "2025 Elétrico"
+        }
+    ]
+}

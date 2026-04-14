@@ -1,0 +1,66 @@
+{
+    "modelos": [
+        {
+            "codigo": 6308,
+            "nome": "SY1020 T 20 TRUCKS BAU"
+        },
+        {
+            "codigo": 6309,
+            "nome": "SY1020 T 22 TRUCKS CD"
+        },
+        {
+            "codigo": 5980,
+            "nome": "SY1020 T20 TRUCKS"
+        },
+        {
+            "codigo": 6714,
+            "nome": "SY6370 A7 PVAN"
+        },
+        {
+            "codigo": 5981,
+            "nome": "SY6390 A9 CARGOV"
+        },
+        {
+            "codigo": 5982,
+            "nome": "SY6390 A9 PVANS"
+        },
+        {
+            "codigo": 11238,
+            "nome": "TLUX 1.6 16V Mec."
+        },
+        {
+            "codigo": 6975,
+            "nome": "X30 VAN 1.3 16V Mec."
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-1",
+            "nome": "32000 Gasolina"
+        },
+        {
+            "codigo": "2026-1",
+            "nome": "2026 Gasolina"
+        },
+        {
+            "codigo": "2025-1",
+            "nome": "2025 Gasolina"
+        },
+        {
+            "codigo": "2015-1",
+            "nome": "2015 Gasolina"
+        },
+        {
+            "codigo": "2014-1",
+            "nome": "2014 Gasolina"
+        },
+        {
+            "codigo": "2013-1",
+            "nome": "2013 Gasolina"
+        },
+        {
+            "codigo": "2012-1",
+            "nome": "2012 Gasolina"
+        }
+    ]
+}

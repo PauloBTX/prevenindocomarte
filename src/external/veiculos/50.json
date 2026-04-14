@@ -1,0 +1,18 @@
+{
+    "modelos": [
+        {
+            "codigo": 2095,
+            "nome": "9000 CD 2.3 Turbo"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "1993-1",
+            "nome": "1993 Gasolina"
+        },
+        {
+            "codigo": "1992-1",
+            "nome": "1992 Gasolina"
+        }
+    ]
+}

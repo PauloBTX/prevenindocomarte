@@ -1,0 +1,34 @@
+{
+    "modelos": [
+        {
+            "codigo": 11336,
+            "nome": "AYA Comfort 4S Aut. (Elétrico)"
+        },
+        {
+            "codigo": 11337,
+            "nome": "AYA Luxury 4S Aut. (Elétrico)"
+        },
+        {
+            "codigo": 11353,
+            "nome": "X 400 Comfort Aut. (Elétrico)"
+        },
+        {
+            "codigo": 11354,
+            "nome": "X 500 Comfort Aut. (Elétrico)"
+        },
+        {
+            "codigo": 11355,
+            "nome": "X 500 Luxury Aut. (Elétrico)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2024-4",
+            "nome": "2024 Elétrico"
+        }
+    ]
+}

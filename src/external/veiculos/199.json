@@ -1,0 +1,46 @@
+{
+    "modelos": [
+        {
+            "codigo": 6778,
+            "nome": "EC7 1.8 16V 130cv 4p Mec."
+        },
+        {
+            "codigo": 11770,
+            "nome": "EX2 MAX "
+        },
+        {
+            "codigo": 11771,
+            "nome": "EX2 PRO "
+        },
+        {
+            "codigo": 11536,
+            "nome": "EX5 MAX (Elétrico)"
+        },
+        {
+            "codigo": 11537,
+            "nome": "EX5 PRO (Elétrico)"
+        },
+        {
+            "codigo": 7031,
+            "nome": "GC2 1.0 12V 68cv 5p"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2026-4",
+            "nome": "2026 Elétrico"
+        },
+        {
+            "codigo": "2015-1",
+            "nome": "2015 Gasolina"
+        },
+        {
+            "codigo": "2014-1",
+            "nome": "2014 Gasolina"
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "modelos": [
+        {
+            "codigo": 9561,
+            "nome": "Stark Mountaim 2.3 AWD TDI Diesel 3p "
+        },
+        {
+            "codigo": 9562,
+            "nome": "Stark Superação 2.3 AWD 2.3 TDI Die. 3p"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-3",
+            "nome": "32000 Diesel"
+        },
+        {
+            "codigo": "2022-3",
+            "nome": "2022 Diesel"
+        },
+        {
+            "codigo": "2021-3",
+            "nome": "2021 Diesel"
+        }
+    ]
+}

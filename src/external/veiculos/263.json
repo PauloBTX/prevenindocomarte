@@ -1,0 +1,18 @@
+{
+    "modelos": [
+        {
+            "codigo": 11873,
+            "nome": "B5 4WD"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-6",
+            "nome": "32000 Híbrido"
+        },
+        {
+            "codigo": "2026-6",
+            "nome": "2026 Híbrido"
+        }
+    ]
+}

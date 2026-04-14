@@ -1,0 +1,126 @@
+{
+    "modelos": [
+        {
+            "codigo": 11403,
+            "nome": "Delivery Baú 11,5kW (Elétrico)"
+        },
+        {
+            "codigo": 11404,
+            "nome": "Delivery Baú 23,0kW (Elétrico)"
+        },
+        {
+            "codigo": 11405,
+            "nome": "Delivery Baú Refrig. 23,0kW (Elétrico)"
+        },
+        {
+            "codigo": 9434,
+            "nome": "e.co Cargo 10kW (Elétrico)"
+        },
+        {
+            "codigo": 10728,
+            "nome": "e.co Cargo 15.7kWh (Elétrico)"
+        },
+        {
+            "codigo": 9435,
+            "nome": "e.co Cargo 7,5kW (Elétrico)"
+        },
+        {
+            "codigo": 10729,
+            "nome": "e.co Delivery 15,7kWh (Elétrico)"
+        },
+        {
+            "codigo": 10730,
+            "nome": "e.co Delivery 7,7kWh (Elétrico)"
+        },
+        {
+            "codigo": 9436,
+            "nome": "e.co Tech2 6kW (Elétrico)"
+        },
+        {
+            "codigo": 9437,
+            "nome": "e.co Tech4 6kW (Elétrico)"
+        },
+        {
+            "codigo": 9438,
+            "nome": "e.co Truck 10kW (Elétrico)"
+        },
+        {
+            "codigo": 10731,
+            "nome": "e.co Truck 15,7kWh (Elétrico)"
+        },
+        {
+            "codigo": 9439,
+            "nome": "e.co Truck 7,5kW (Elétrico)"
+        },
+        {
+            "codigo": 11072,
+            "nome": "e.coCargo 31,4 kW (Elétrico)"
+        },
+        {
+            "codigo": 11073,
+            "nome": "e.coTruck 31,4 kW (Elétrico)"
+        },
+        {
+            "codigo": 11638,
+            "nome": "E-Work EC31 Baú 38,7kW"
+        },
+        {
+            "codigo": 11639,
+            "nome": "E-Work EC31 Cabine Chassi 38,7kW"
+        },
+        {
+            "codigo": 11640,
+            "nome": "E-Work EC31 Caçamba 38,7kW"
+        },
+        {
+            "codigo": 11641,
+            "nome": "E-Work EC31 Refrigerado 38,7kW"
+        },
+        {
+            "codigo": 11642,
+            "nome": "E-Work EC35 Van 38,7kW"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2025-4",
+            "nome": "2025 Elétrico"
+        },
+        {
+            "codigo": "2024-4",
+            "nome": "2024 Elétrico"
+        },
+        {
+            "codigo": "2023-4",
+            "nome": "2023 Elétrico"
+        },
+        {
+            "codigo": "2022-4",
+            "nome": "2022 Elétrico"
+        },
+        {
+            "codigo": "2021-4",
+            "nome": "2021 Elétrico"
+        },
+        {
+            "codigo": "2020-4",
+            "nome": "2020 Elétrico"
+        },
+        {
+            "codigo": "2019-4",
+            "nome": "2019 Elétrico"
+        },
+        {
+            "codigo": "2018-4",
+            "nome": "2018 Elétrico"
+        },
+        {
+            "codigo": "2017-4",
+            "nome": "2017 Elétrico"
+        }
+    ]
+}

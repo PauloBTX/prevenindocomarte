@@ -1,0 +1,46 @@
+{
+    "modelos": [
+        {
+            "codigo": 1348,
+            "nome": "Amigo 2.3 4x2/4x4"
+        },
+        {
+            "codigo": 1349,
+            "nome": "Hombre 2 WD XS 2.2"
+        },
+        {
+            "codigo": 1350,
+            "nome": "Rodeo 3.2 V6"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "1998-1",
+            "nome": "1998 Gasolina"
+        },
+        {
+            "codigo": "1997-1",
+            "nome": "1997 Gasolina"
+        },
+        {
+            "codigo": "1996-1",
+            "nome": "1996 Gasolina"
+        },
+        {
+            "codigo": "1995-1",
+            "nome": "1995 Gasolina"
+        },
+        {
+            "codigo": "1994-1",
+            "nome": "1994 Gasolina"
+        },
+        {
+            "codigo": "1993-1",
+            "nome": "1993 Gasolina"
+        },
+        {
+            "codigo": "1992-1",
+            "nome": "1992 Gasolina"
+        }
+    ]
+}

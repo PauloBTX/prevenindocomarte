@@ -1,0 +1,198 @@
+{
+    "modelos": [
+        {
+            "codigo": 11290,
+            "nome": "1500 LARAM. NIGHT ED. BI-TB 3.0 4x4 Aut."
+        },
+        {
+            "codigo": 11291,
+            "nome": "1500 LARAMIE 3.0 CD BI-TB 4x4 Aut."
+        },
+        {
+            "codigo": 10650,
+            "nome": "1500 LIMITED 5.7 CD 4x4 Aut."
+        },
+        {
+            "codigo": 10651,
+            "nome": "1500 LIMITED NIGHT EDITION 5.7 4x4 Aut."
+        },
+        {
+            "codigo": 9287,
+            "nome": "1500 REBEL 5.7 HEMI CD V8 4x4 Aut."
+        },
+        {
+            "codigo": 9685,
+            "nome": "2500 LARAM. 6.7 Ed. ABQM TB CD 4X4 Die."
+        },
+        {
+            "codigo": 9215,
+            "nome": "2500 LARAM. 6.7 NIGHT ED. TB CD 4x4 Die."
+        },
+        {
+            "codigo": 9541,
+            "nome": "2500 LARAM. 6.7 RODEO ED. TB CD 4x4 Die."
+        },
+        {
+            "codigo": 6305,
+            "nome": "2500 LARAMIE  6.7 TDI  CD 4x4 Diesel"
+        },
+        {
+            "codigo": 6306,
+            "nome": "2500 LARAMIE TROPIV. 6.7 4x4 Diesel"
+        },
+        {
+            "codigo": 9958,
+            "nome": "3500 LARAM.6.7 NIGHT ED.TB CD 4X4 Die. "
+        },
+        {
+            "codigo": 9784,
+            "nome": "3500 LARAMIE 6.7 TB CD 4x4 Diesel"
+        },
+        {
+            "codigo": 9890,
+            "nome": "3500 LIMITED LONGHORN 6.7 TB CD Diesel"
+        },
+        {
+            "codigo": 10391,
+            "nome": "3500 YELLOWSTONE EDITION 6.7 TB CD Die."
+        },
+        {
+            "codigo": 10135,
+            "nome": "CLASSIC LARAMIE 5.7 CD V8 4X4 Aut."
+        },
+        {
+            "codigo": 10136,
+            "nome": "CLASSIC LARAMIE NIGHT ED. 5.7 4X4 Aut."
+        },
+        {
+            "codigo": 11100,
+            "nome": "CLASSIC R/T 5.7 CD V8 4X4 Aut."
+        },
+        {
+            "codigo": 11875,
+            "nome": "DAKOTA LARAMIE 2.2 TB CD 4x4 Aut."
+        },
+        {
+            "codigo": 11876,
+            "nome": "DAKOTA WARLOCK 2.2 TB CD 4x4 Aut."
+        },
+        {
+            "codigo": 11327,
+            "nome": "RAMPAGE BIG HORN 2.2 TB CD 4X4 Die Aut."
+        },
+        {
+            "codigo": 10736,
+            "nome": "RAMPAGE LAR. HURR. 4 2.0 TB CD 4X4  Aut."
+        },
+        {
+            "codigo": 10737,
+            "nome": "RAMPAGE LARAMIE 2.0 TB CD 4X4 Die. Aut."
+        },
+        {
+            "codigo": 11272,
+            "nome": "RAMPAGE LARAMIE 2.2 TB CD 4X4 Die. Aut."
+        },
+        {
+            "codigo": 10738,
+            "nome": "RAMPAGE R/T HURRIC. 4 2.0 TB CD 4X4 Aut."
+        },
+        {
+            "codigo": 10739,
+            "nome": "RAMPAGE REBEL 2.0 TB CD 4X4 Diesel Aut."
+        },
+        {
+            "codigo": 11273,
+            "nome": "RAMPAGE REBEL 2.2 TB CD 4X4 Diesel Aut."
+        },
+        {
+            "codigo": 10740,
+            "nome": "RAMPAGE REBEL HURR.4 2.0 TB CD 4X4 Aut."
+        },
+        {
+            "codigo": 11274,
+            "nome": "RAMPAGE REBEL IGNIT. 2.0 TB CD 4X4 Aut."
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-1",
+            "nome": "32000 Gasolina"
+        },
+        {
+            "codigo": "32000-3",
+            "nome": "32000 Diesel"
+        },
+        {
+            "codigo": "2026-1",
+            "nome": "2026 Gasolina"
+        },
+        {
+            "codigo": "2026-3",
+            "nome": "2026 Diesel"
+        },
+        {
+            "codigo": "2025-1",
+            "nome": "2025 Gasolina"
+        },
+        {
+            "codigo": "2025-3",
+            "nome": "2025 Diesel"
+        },
+        {
+            "codigo": "2024-1",
+            "nome": "2024 Gasolina"
+        },
+        {
+            "codigo": "2024-3",
+            "nome": "2024 Diesel"
+        },
+        {
+            "codigo": "2023-1",
+            "nome": "2023 Gasolina"
+        },
+        {
+            "codigo": "2023-3",
+            "nome": "2023 Diesel"
+        },
+        {
+            "codigo": "2022-1",
+            "nome": "2022 Gasolina"
+        },
+        {
+            "codigo": "2022-3",
+            "nome": "2022 Diesel"
+        },
+        {
+            "codigo": "2021-1",
+            "nome": "2021 Gasolina"
+        },
+        {
+            "codigo": "2021-3",
+            "nome": "2021 Diesel"
+        },
+        {
+            "codigo": "2020-3",
+            "nome": "2020 Diesel"
+        },
+        {
+            "codigo": "2019-3",
+            "nome": "2019 Diesel"
+        },
+        {
+            "codigo": "2018-3",
+            "nome": "2018 Diesel"
+        },
+        {
+            "codigo": "2017-3",
+            "nome": "2017 Diesel"
+        },
+        {
+            "codigo": "2016-3",
+            "nome": "2016 Diesel"
+        },
+        {
+            "codigo": "2012-3",
+            "nome": "2012 Diesel"
+        }
+    ]
+}

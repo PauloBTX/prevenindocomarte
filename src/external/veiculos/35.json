@@ -1,0 +1,18 @@
+{
+    "modelos": [
+        {
+            "codigo": 1481,
+            "nome": "Elan S-2 1.6 16V"
+        },
+        {
+            "codigo": 1482,
+            "nome": "Esprit S-4 2.2 16V"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "1995-1",
+            "nome": "1995 Gasolina"
+        }
+    ]
+}

@@ -1,0 +1,174 @@
+{
+    "modelos": [
+        {
+            "codigo": 7342,
+            "nome": "K01 Pick-up CS 1.0 8V 2p"
+        },
+        {
+            "codigo": 7343,
+            "nome": "K02 Pick-up CD 1.0 8V 4p"
+        },
+        {
+            "codigo": 4637,
+            "nome": "M-100 1.0 8V 5p"
+        },
+        {
+            "codigo": 5660,
+            "nome": "Plutus 3.2 8V 4x2 CD Turbo Diesel"
+        },
+        {
+            "codigo": 5661,
+            "nome": "Start Picape CD 1.0 8V 5p"
+        },
+        {
+            "codigo": 5662,
+            "nome": "Start Picape L 1.0 8V 2p"
+        },
+        {
+            "codigo": 5663,
+            "nome": "Start Van 1.0 8V 4p"
+        },
+        {
+            "codigo": 4638,
+            "nome": "ULC FURGÃO 1.0 8V 5p"
+        },
+        {
+            "codigo": 4639,
+            "nome": "ULC PICAPE 1.0 8V 2p"
+        },
+        {
+            "codigo": 5358,
+            "nome": "ULC PICAPE CD 1.0 8V 4p"
+        },
+        {
+            "codigo": 5359,
+            "nome": "ULC PICAPE Longa 1.0 8V 2p"
+        },
+        {
+            "codigo": 5360,
+            "nome": "ULC PICAPE Longa Bau 1.0 8V 2p"
+        },
+        {
+            "codigo": 4640,
+            "nome": "ULC VAN 1.0 8V 5p"
+        },
+        {
+            "codigo": 7344,
+            "nome": "V21 Pick-up CS 1.3 16V 2p"
+        },
+        {
+            "codigo": 11521,
+            "nome": "V21 Pick-up CS 1.5 16V 2p"
+        },
+        {
+            "codigo": 7345,
+            "nome": "V22 Pick-up CD 1.3 16V 4p"
+        },
+        {
+            "codigo": 11543,
+            "nome": "V22 Pick-up CD 1.5 16V 4p"
+        },
+        {
+            "codigo": 9041,
+            "nome": "V25 Furgão 1.3 16V 5p"
+        },
+        {
+            "codigo": 11655,
+            "nome": "V25 Furgão 1.5 16V 5p"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-1",
+            "nome": "32000 Gasolina"
+        },
+        {
+            "codigo": "2027-1",
+            "nome": "2027 Gasolina"
+        },
+        {
+            "codigo": "2026-1",
+            "nome": "2026 Gasolina"
+        },
+        {
+            "codigo": "2025-1",
+            "nome": "2025 Gasolina"
+        },
+        {
+            "codigo": "2024-1",
+            "nome": "2024 Gasolina"
+        },
+        {
+            "codigo": "2023-1",
+            "nome": "2023 Gasolina"
+        },
+        {
+            "codigo": "2022-1",
+            "nome": "2022 Gasolina"
+        },
+        {
+            "codigo": "2021-1",
+            "nome": "2021 Gasolina"
+        },
+        {
+            "codigo": "2020-1",
+            "nome": "2020 Gasolina"
+        },
+        {
+            "codigo": "2019-1",
+            "nome": "2019 Gasolina"
+        },
+        {
+            "codigo": "2018-1",
+            "nome": "2018 Gasolina"
+        },
+        {
+            "codigo": "2017-1",
+            "nome": "2017 Gasolina"
+        },
+        {
+            "codigo": "2016-1",
+            "nome": "2016 Gasolina"
+        },
+        {
+            "codigo": "2014-1",
+            "nome": "2014 Gasolina"
+        },
+        {
+            "codigo": "2012-1",
+            "nome": "2012 Gasolina"
+        },
+        {
+            "codigo": "2012-3",
+            "nome": "2012 Diesel"
+        },
+        {
+            "codigo": "2011-1",
+            "nome": "2011 Gasolina"
+        },
+        {
+            "codigo": "2011-3",
+            "nome": "2011 Diesel"
+        },
+        {
+            "codigo": "2010-1",
+            "nome": "2010 Gasolina"
+        },
+        {
+            "codigo": "2009-1",
+            "nome": "2009 Gasolina"
+        },
+        {
+            "codigo": "2008-1",
+            "nome": "2008 Gasolina"
+        },
+        {
+            "codigo": "2007-1",
+            "nome": "2007 Gasolina"
+        },
+        {
+            "codigo": "2006-1",
+            "nome": "2006 Gasolina"
+        }
+    ]
+}

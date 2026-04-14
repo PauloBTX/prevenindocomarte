@@ -5,7 +5,7 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { ChevronLeft, Info, Plus, Trash2, ArrowRight, CheckCircle2, ArrowLeft, MapPin, Home } from "lucide-react";
+import { ChevronLeft, Info, Plus, Trash2, ArrowRight, CheckCircle2, ArrowLeft, MapPin, Home, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,17 @@ import { PasswordStrengthInput } from "@/components/ui/password-strength-input";
 import { PhotoCropperModal } from "@/components/ui/photo-cropper-modal";
 import { REGISTRATION_CONFIG } from "@/config/registration";
 import { cn } from "@/lib/utils";
+import marcasVeiculos from "@/external/veiculos/marcas.json";
 
 const reqStr = (msg: string) => z.string().min(1, msg);
 
 const vehicleSchema = z.object({
-  brand: reqStr("Marca obrigatória").min(2, "Mínimo 2 caracteres"),
-  model: reqStr("Modelo obrigatório").min(2, "Mínimo 2 caracteres"),
-  plate: reqStr("Placa obrigatória").regex(/^[a-zA-Z]{3}-?[0-9][A-Za-z0-9][0-9]{2}$/, "Placa inválida (ex: ABC-1234)"),
+  brand: reqStr("Marca obrigatória"),
+  model: reqStr("Modelo obrigatório"),
+  plate: reqStr("Placa obrigatória").refine(
+    (val) => /^([A-Z]{3}[0-9][A-Z][0-9]{2}|[A-Z]{3}-?[0-9]{4})$/i.test(val),
+    "Placa inválida (Padrão ABC-1234 ou Mercosul ABC1D23)"
+  ),
 });
 
 const formSchema = z.object({
@@ -33,10 +37,22 @@ const formSchema = z.object({
     .min(3, "Mínimo 3 caracteres")
     .refine(val => val.trim().split(/\s+/).length >= 2, "Digite o nome e sobrenome"),
   cpf: reqStr("CPF obrigatório").min(14, "CPF incompleto"), // length with mask is 14
-  birthDate: reqStr("Data obrigatória").min(10, "Data incompleta"),
+  birthDate: reqStr("Data obrigatória")
+    .min(10, "Data incompleta")
+    .refine((val) => {
+      const birth = new Date(val);
+      const now = new Date();
+      const age = now.getFullYear() - birth.getFullYear();
+      const m = now.getMonth() - birth.getMonth();
+      const ageAdjusted = (m < 0 || (m === 0 && now.getDate() < birth.getDate())) ? age - 1 : age;
+      return ageAdjusted >= 16;
+    }, "A idade mínima para adultos é 16 anos"),
   whatsapp: reqStr("Telefone obrigatório").min(14, "Telefone incompleto"),
   email: reqStr("E-mail obrigatório").email("E-mail inválido"),
-  healthIssues: z.array(z.string()).optional(),
+  healthIssues: z.array(z.string()).default([]),
+  healthNotes: z.string().optional(),
+  usesMedication: z.boolean().default(false),
+  medicationDetails: z.string().optional(),
   password: reqStr("Senha de acesso obrigatória").min(6, "No mínimo 6 caracteres"),
   confirmPassword: reqStr("Confirmação de senha obrigatória").min(1, "Confirme sua senha"),
   needsParking: z.boolean().default(false),
@@ -61,7 +77,10 @@ export default function RegisterSelfPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const totalSteps = 6; 
+  const totalSteps = 6;
+
+  const [modelsByVehicle, setModelsByVehicle] = React.useState<Record<number, {codigo: number | string, nome: string}[]>>({});
+  const [loadingModels, setLoadingModels] = React.useState<Record<number, boolean>>({});
 
   const { register, handleSubmit, control, trigger, setValue, formState: { errors }, watch } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,6 +94,9 @@ export default function RegisterSelfPage() {
       password: "",
       confirmPassword: "",
       healthIssues: [],
+      healthNotes: "",
+      usesMedication: false,
+      medicationDetails: "",
       needsParking: false,
       acceptTerms: false,
       acceptRules: false,
@@ -90,8 +112,37 @@ export default function RegisterSelfPage() {
   });
 
   const needsParking = watch("needsParking");
+  const usesMedication = watch("usesMedication");
 
   // Formatters
+
+  const handleBrandChange = async (index: number, brandCode: string) => {
+    if (!brandCode) {
+      setModelsByVehicle(prev => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
+      setValue(`vehicles.${index}.model`, "");
+      return;
+    }
+
+    setLoadingModels(prev => ({ ...prev, [index]: true }));
+    try {
+      // Import the dynamic models JSON
+      const data = await import(`@/external/veiculos/${brandCode}.json`);
+      const modelList = data.default?.modelos || data.modelos || [];
+      
+      setModelsByVehicle(prev => ({ ...prev, [index]: modelList }));
+      setValue(`vehicles.${index}.model`, "");
+    } catch (error) {
+      console.error("Erro ao carregar modelos:", error);
+      setModelsByVehicle(prev => ({ ...prev, [index]: [] }));
+    } finally {
+      setLoadingModels(prev => ({ ...prev, [index]: false }));
+    }
+  };
+
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
@@ -142,7 +193,7 @@ export default function RegisterSelfPage() {
   };
 
   const simulateUpload = (
-    file: File | null, 
+    file: File | null,
     setState: React.Dispatch<React.SetStateAction<UploadState>>,
     setFileState: React.Dispatch<React.SetStateAction<File | null>>
   ) => {
@@ -183,7 +234,7 @@ export default function RegisterSelfPage() {
       isStepValid = await trigger(["videoPassword"]);
     } else if (currentStep === 3) {
       isStepValid = await trigger([
-        "name", "cpf", "birthDate", "whatsapp", "email", 
+        "name", "cpf", "birthDate", "whatsapp", "email",
         "healthIssues", "password", "confirmPassword"
       ]);
     } else if (currentStep === 4) {
@@ -213,6 +264,8 @@ export default function RegisterSelfPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const usesMedication = watch("usesMedication");
+
   const onSubmit = (data: FormValues) => {
     if (!docFile || !photoFile || !recordFile || !addressFile) {
       setCurrentStep(5);
@@ -231,9 +284,9 @@ export default function RegisterSelfPage() {
         {/* Header Success */}
         <div className="w-full bg-white h-16 shadow-xs flex items-center px-4 md:px-8">
           <div className="max-w-2xl w-full mx-auto flex items-center gap-4">
-            <button 
-              type="button" 
-              onClick={() => router.push("/")} 
+            <button
+              type="button"
+              onClick={() => router.push("/")}
               className="p-2 text-[#002855] hover:bg-slate-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -244,7 +297,7 @@ export default function RegisterSelfPage() {
 
         <div className="flex-1 w-full flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-md flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
-            
+
             <div className="relative mb-6 mt-10">
               <div className="w-32 h-32 rounded-full bg-green-100 flex items-center justify-center">
                 <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center text-white">
@@ -275,19 +328,19 @@ export default function RegisterSelfPage() {
                     <Info className="w-4 h-4" /> Atenção
                   </p>
                   <p className="text-slate-700 text-sm">
-                    É necessário levar <span className="font-bold text-red-700">NADA CONSTA<br/>criminal do TJDFT</span> impresso.
+                    É necessário levar <span className="font-bold text-red-700">NADA CONSTA<br />criminal do TJDFT</span> impresso.
                   </p>
                 </div>
               </div>
             </div>
 
-            <Button 
-              type="button" 
-              onClick={() => router.push("/login")} 
+            <Button
+              type="button"
+              onClick={() => router.push("/login")}
               variant="outline"
               className="mt-12 w-full h-14 border-2 border-[#002855] text-[#002855] text-lg font-bold rounded-2xl hover:bg-[#002855] hover:text-white"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
               Voltar ao Início
             </Button>
           </div>
@@ -295,10 +348,10 @@ export default function RegisterSelfPage() {
 
         {/* Footer Success */}
         <div className="py-8 flex flex-col items-center text-center text-slate-500 text-sm space-y-2">
-           <p className="flex items-center justify-center gap-1.5">
-             <MapPin className="w-4 h-4" /> 4º Batalhão de Polícia Militar - Guará, DF
-           </p>
-           <p>© 2026 PMDF - Prevenindo com Arte</p>
+          <p className="flex items-center justify-center gap-1.5">
+            <MapPin className="w-4 h-4" /> 4º Batalhão de Polícia Militar - Guará, DF
+          </p>
+          <p>© 2026 PMDF - Prevenindo com Arte</p>
         </div>
       </div>
     );
@@ -314,24 +367,24 @@ export default function RegisterSelfPage() {
       <div className="w-full bg-[#002855] text-white pt-12 pb-6 px-4 md:px-8 relative shadow-md">
         <div className="max-w-2xl mx-auto flex flex-col gap-4">
           <div className="grid grid-cols-[3rem_1fr_3rem] items-center relative gap-2">
-            <button 
-              type="button" 
+            <button
+              type="button"
               title="Voltar"
               onClick={() => {
-                if(currentStep === 1) router.back();
+                if (currentStep === 1) router.back();
                 else handlePrevStep();
-              }} 
+              }}
               className="p-2 hover:bg-white/10 rounded-full transition-colors flex items-center justify-center justify-self-start"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
-            
+
             <h1 className="text-xl md:text-2xl font-bold tracking-wide text-center">Cadastro Para Adultos</h1>
-            
-            <button 
-              type="button" 
+
+            <button
+              type="button"
               title="Voltar ao Login"
-              onClick={() => router.push("/login")} 
+              onClick={() => router.push("/login")}
               className="p-2 hover:bg-white/10 rounded-full transition-colors flex items-center justify-center justify-self-end"
             >
               <Home className="w-6 h-6" />
@@ -349,10 +402,10 @@ export default function RegisterSelfPage() {
       <div className="w-full max-w-2xl px-4 mt-6">
         <div className="flex items-center w-full gap-2 mb-8">
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className={cn(
-                "h-2 w-full rounded-full transition-all duration-300", 
+                "h-2 w-full rounded-full transition-all duration-300",
                 i + 1 <= currentStep ? "bg-blue-600" : "bg-slate-200"
               )}
             />
@@ -360,7 +413,7 @@ export default function RegisterSelfPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          
+
           {/* STEP 1: Orientações */}
           {currentStep === 1 && (
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -371,7 +424,7 @@ export default function RegisterSelfPage() {
 
               <div className="space-y-4 text-slate-700 leading-relaxed">
                 <p>Para garantir sua vaga no programa, siga atentamente as etapas e os prazos abaixo:</p>
-                
+
                 <h3 className="font-bold text-slate-900 mt-6">1. Cronograma e Local</h3>
                 <ul className="list-disc pl-5 space-y-1">
                   <li><strong>Período:</strong> a partir de 20 de fevereiro de 2026.</li>
@@ -440,12 +493,12 @@ export default function RegisterSelfPage() {
               </div>
 
               <div className="aspect-video w-full rounded-xl overflow-hidden shadow-lg border bg-slate-900 relative">
-                 <iframe 
+                <iframe
                   className="w-full h-full absolute inset-0"
-                  src={getYoutubeEmbedUrl(REGISTRATION_CONFIG.videoUrl)} 
-                  title="YouTube video player" 
-                  frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  src={getYoutubeEmbedUrl(REGISTRATION_CONFIG.videoUrl)}
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 ></iframe>
               </div>
@@ -457,11 +510,11 @@ export default function RegisterSelfPage() {
                     name="videoPassword"
                     control={control}
                     render={({ field }) => (
-                      <Input 
-                        id="videoPassword" 
-                        placeholder="Digite a senha..." 
-                        {...field} 
-                        className={cn("h-12 text-lg", errors.videoPassword && "border-red-500")} 
+                      <Input
+                        id="videoPassword"
+                        placeholder="Digite a senha..."
+                        {...field}
+                        className={cn("h-12 text-lg", errors.videoPassword && "border-red-500")}
                       />
                     )}
                   />
@@ -483,7 +536,7 @@ export default function RegisterSelfPage() {
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Dados Pessoais</h2>
-                
+
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="name">Nome Completo *</Label>
@@ -498,15 +551,15 @@ export default function RegisterSelfPage() {
                         name="cpf"
                         control={control}
                         render={({ field }) => (
-                          <Input 
+                          <Input
                             {...field}
-                            id="cpf" 
-                            placeholder="000.000.000-00" 
+                            id="cpf"
+                            placeholder="000.000.000-00"
                             maxLength={14}
                             onChange={(e) => {
                               handleCpfChange(e);
                             }}
-                            className={errors.cpf ? "border-red-500" : ""} 
+                            className={errors.cpf ? "border-red-500" : ""}
                           />
                         )}
                       />
@@ -526,15 +579,15 @@ export default function RegisterSelfPage() {
                         name="whatsapp"
                         control={control}
                         render={({ field }) => (
-                          <Input 
+                          <Input
                             {...field}
-                            id="whatsapp" 
-                            placeholder="(00) 00000-0000" 
+                            id="whatsapp"
+                            placeholder="(00) 00000-0000"
                             maxLength={15}
                             onChange={(e) => {
                               handlePhoneChange(e);
                             }}
-                            className={errors.whatsapp ? "border-red-500" : ""} 
+                            className={errors.whatsapp ? "border-red-500" : ""}
                           />
                         )}
                       />
@@ -554,12 +607,12 @@ export default function RegisterSelfPage() {
                     name="notes"
                     control={control}
                     render={({ field }) => (
-                       <textarea 
-                         id="notes" 
-                         placeholder="Escreva alguma observação, se houver..." 
-                         className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                         {...field}
-                       />
+                      <textarea
+                        id="notes"
+                        placeholder="Escreva alguma observação, se houver..."
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        {...field}
+                      />
                     )}
                   />
                   {errors.notes && <p className="text-xs text-red-500">{errors.notes.message}</p>}
@@ -567,15 +620,31 @@ export default function RegisterSelfPage() {
               </div>
 
               <div className="space-y-5">
-                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Saúde</h2>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Saúde</h2>
+                  <p className="text-sm text-slate-500 font-medium">Marque apenas as condições que tiver</p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Hipertensão", "Diabetes", "Problemas Cardíacos", "Asma", "Nenhuma condição"].map((item, i) => (
+                  {[
+                    "Hipertensão",
+                    "Diabetes",
+                    "Problemas Cardíacos",
+                    "Asma",
+                    "Epilepsia / convulsões",
+                    "Alergias (alimentares, medicamentos, picadas, etc.)",
+                    "Problemas respiratórios (além de asma)",
+                    "Problemas neurológicos",
+                    "Problemas ortopédicos (joelho, coluna, etc.)",
+                    "Transtornos psicológicos (ansiedade, TDAH, depressão)",
+                    "Deficiências (auditiva, visual, motora, intelectual)"
+                  ].map((item, i) => (
                     <div key={item} className="flex flex-row items-center space-x-3 text-sm">
                       <Controller
                         control={control}
                         name="healthIssues"
                         render={({ field }) => (
-                          <Checkbox 
+                          <Checkbox
                             id={`health-${i}`}
                             className={checkboxOverrideClasses}
                             checked={field.value?.includes(item)}
@@ -595,6 +664,55 @@ export default function RegisterSelfPage() {
                       </Label>
                     </div>
                   ))}
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <Label htmlFor="healthNotes">Observações sobre sua saúde</Label>
+                  <Controller
+                    name="healthNotes"
+                    control={control}
+                    render={({ field }) => (
+                      <textarea
+                        id="healthNotes"
+                        placeholder="Caso tenha alguma condição não listada ou detalhes importantes..."
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        {...field}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex flex-row items-center space-x-3">
+                    <Controller
+                      name="usesMedication"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="usesMedication"
+                          className={checkboxOverrideClasses}
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label htmlFor="usesMedication" className="text-base font-semibold text-slate-800 cursor-pointer">
+                      Faz uso contínuo de medicamentos?
+                    </Label>
+                  </div>
+
+                  {usesMedication && (
+                    <div className="pl-8 animate-in fade-in slide-in-from-left-2 duration-300">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="medicationDetails">Qual(is)</Label>
+                        <Input
+                          id="medicationDetails"
+                          placeholder="Liste os medicamentos que utiliza"
+                          {...register("medicationDetails")}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -620,12 +738,12 @@ export default function RegisterSelfPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                    <Input 
-                      id="confirmPassword" 
-                      type="password" 
-                      placeholder="Repita sua senha" 
-                      {...register("confirmPassword")} 
-                      className={errors.confirmPassword ? "border-red-500" : ""} 
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Repita sua senha"
+                      {...register("confirmPassword")}
+                      className={errors.confirmPassword ? "border-red-500" : ""}
                     />
                     {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>}
                   </div>
@@ -668,43 +786,83 @@ export default function RegisterSelfPage() {
                 <div className="space-y-6 mt-4">
                   {vehicles.map((field, index) => (
                     <div key={field.id} className="relative p-5 border rounded-xl bg-white space-y-4">
-                       <div className="flex justify-between items-center border-b pb-2">
-                         <h3 className="font-bold text-slate-700">Veículo {index + 1}</h3>
-                         <button
-                            type="button"
-                            onClick={() => removeVehicle(index)}
-                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg flex items-center text-sm ml-auto font-medium"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" /> Remover
-                          </button>
-                       </div>
-                       
-                       <div className="space-y-3">
-                         <div className="space-y-1">
-                           <Label className="text-sm font-medium">Marca *</Label>
-                           <Input placeholder="Ex: Volkswagen" {...register(`vehicles.${index}.brand` as const)} />
-                           {errors.vehicles?.[index]?.brand && <p className="text-xs text-red-500">{errors.vehicles[index]?.brand?.message}</p>}
-                         </div>
-                         <div className="space-y-1">
-                           <Label className="text-sm font-medium">Modelo *</Label>
-                           <Input placeholder="Ex: Gol" {...register(`vehicles.${index}.model` as const)} />
-                           {errors.vehicles?.[index]?.model && <p className="text-xs text-red-500">{errors.vehicles[index]?.model?.message}</p>}
-                         </div>
-                         <div className="space-y-1">
-                           <Label className="text-sm font-medium">Placa *</Label>
-                           <Input placeholder="ABC-1234" {...register(`vehicles.${index}.plate` as const)} className="uppercase" />
-                           {errors.vehicles?.[index]?.plate && <p className="text-xs text-red-500">{errors.vehicles[index]?.plate?.message}</p>}
-                         </div>
-                       </div>
+                      <div className="flex justify-between items-center border-b pb-2">
+                        <h3 className="font-bold text-slate-700">Veículo {index + 1}</h3>
+                        <button
+                          type="button"
+                          onClick={() => removeVehicle(index)}
+                          className="text-red-500 hover:bg-red-50 p-2 rounded-lg flex items-center text-sm ml-auto font-medium"
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" /> Remover
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <Label className="text-sm font-medium">Marca *</Label>
+                          <Controller
+                            control={control}
+                            name={`vehicles.${index}.brand`}
+                            render={({ field }) => (
+                              <select
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handleBrandChange(index, e.target.value);
+                                }}
+                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <option value="">Selecione a marca</option>
+                                {marcasVeiculos.map((m) => (
+                                  <option key={m.codigo} value={m.codigo}>{m.nome}</option>
+                                ))}
+                              </select>
+                            )}
+                          />
+                          {errors.vehicles?.[index]?.brand && <p className="text-xs text-red-500">{errors.vehicles[index]?.brand?.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            Modelo *
+                            {loadingModels[index] && <Loader2 className="w-3 h-3 animate-spin text-blue-600" />}
+                          </Label>
+                          <Controller
+                            control={control}
+                            name={`vehicles.${index}.model`}
+                            render={({ field }) => (
+                              <select
+                                {...field}
+                                disabled={!watch(`vehicles.${index}.brand`) || loadingModels[index]}
+                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <option value="">{loadingModels[index] ? "Carregando..." : "Selecione o modelo"}</option>
+                                {(modelsByVehicle[index] || []).map((mod) => (
+                                  <option key={mod.codigo} value={mod.nome}>{mod.nome}</option>
+                                ))}
+                              </select>
+                            )}
+                          />
+                          {errors.vehicles?.[index]?.model && <p className="text-xs text-red-500">{errors.vehicles[index]?.model?.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-sm font-medium">Placa *</Label>
+                          <Input 
+                            placeholder="ABC-1234 ou ABC1D23" 
+                            {...register(`vehicles.${index}.plate` as const)} 
+                            className={cn("uppercase", errors.vehicles?.[index]?.plate && "border-red-500")}
+                          />
+                          {errors.vehicles?.[index]?.plate && <p className="text-xs text-red-500">{errors.vehicles[index]?.plate?.message}</p>}
+                        </div>
+                      </div>
                     </div>
                   ))}
 
                   {errors.vehicles && !Array.isArray(errors.vehicles) && <p className="text-sm text-red-500 text-center font-medium">{errors.vehicles.message}</p>}
 
                   {vehicles.length < 3 && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={() => appendVehicle({ brand: "", model: "", plate: "" })}
                       className="w-full border-dashed border-2 py-6 text-blue-600 hover:bg-blue-50"
                     >
@@ -731,7 +889,7 @@ export default function RegisterSelfPage() {
                   <h2 className="text-xl font-bold text-slate-800">Documentos Obrigatórios</h2>
                   <Info className="h-5 w-5 text-slate-400" />
                 </div>
-                
+
                 {uploadError && (
                   <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4 flex items-center">
                     <Info className="w-5 h-5 mr-2" />
@@ -740,36 +898,36 @@ export default function RegisterSelfPage() {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FileUploadCard 
-                    title="Documento Oficial *" 
-                    description="RG, CNH, Passaporte." 
+                  <FileUploadCard
+                    title="Documento Oficial *"
+                    description="RG, CNH, Passaporte."
                     variant={docState}
                     fileName={docFile?.name}
                     progress={65}
                     onFileSelect={(f) => simulateUpload(f, setDocState, setDocFile)}
                     onFileRemove={() => removeUpload(setDocState, setDocFile)}
                   />
-                  <FileUploadCard 
-                    title="Foto 3x4 *" 
-                    description="Foto de rosto recente." 
+                  <FileUploadCard
+                    title="Foto 3x4 *"
+                    description="Foto de rosto recente."
                     variant={photoState}
                     fileName={photoFile?.name}
                     progress={100}
                     onFileSelect={handlePhotoSelect}
                     onFileRemove={() => removeUpload(setPhotoState, setPhotoFile)}
                   />
-                  <FileUploadCard 
-                    title="Nada Consta *" 
-                    description="Certidão criminal impresso." 
+                  <FileUploadCard
+                    title="Nada Consta *"
+                    description="Certidão criminal impresso."
                     variant={recordState}
                     fileName={recordFile?.name}
                     progress={88}
                     onFileSelect={(f) => simulateUpload(f, setRecordState, setRecordFile)}
                     onFileRemove={() => removeUpload(setRecordState, setRecordFile)}
                   />
-                  <FileUploadCard 
-                    title="Comprovante de Residência *" 
-                    description="Conta de água, luz, etc." 
+                  <FileUploadCard
+                    title="Comprovante de Residência *"
+                    description="Conta de água, luz, etc."
                     variant={addressState}
                     fileName={addressFile?.name}
                     progress={30}
@@ -791,7 +949,7 @@ export default function RegisterSelfPage() {
           {/* STEP 6: Termos e Conclusão */}
           {currentStep === 6 && (
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              
+
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Termos e Condições</h2>
                 <div className="flex flex-row items-center space-x-3 text-base">
@@ -847,7 +1005,7 @@ export default function RegisterSelfPage() {
         </form>
       </div>
 
-      <PhotoCropperModal 
+      <PhotoCropperModal
         open={isCropperOpen}
         imageSrc={tempPhotoUrl}
         onClose={() => setIsCropperOpen(false)}

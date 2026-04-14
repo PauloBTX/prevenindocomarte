@@ -1,0 +1,74 @@
+{
+    "modelos": [
+        {
+            "codigo": 11484,
+            "nome": "AION ES Plus (Elétrico)"
+        },
+        {
+            "codigo": 11485,
+            "nome": "AION V Elite (Elétrico)"
+        },
+        {
+            "codigo": 11486,
+            "nome": "AION Y Elite (Elétrico)"
+        },
+        {
+            "codigo": 11487,
+            "nome": "AION Y Premium (Elétrico)"
+        },
+        {
+            "codigo": 11928,
+            "nome": "GS3 Elite 1,5 16V Turbo Aut."
+        },
+        {
+            "codigo": 11929,
+            "nome": "GS3 Premium 1,5 16V Turbo Aut."
+        },
+        {
+            "codigo": 11495,
+            "nome": "GS4 Elite (Híbrido)"
+        },
+        {
+            "codigo": 11496,
+            "nome": "GS4 Premium (Híbrido)"
+        },
+        {
+            "codigo": 11497,
+            "nome": "HYPTEC HT Elite (Elétrico)"
+        },
+        {
+            "codigo": 11498,
+            "nome": "HYPTEC HT Ultra (Elétrico)"
+        }
+    ],
+    "anos": [
+        {
+            "codigo": "32000-6",
+            "nome": "32000 Híbrido"
+        },
+        {
+            "codigo": "32000-1",
+            "nome": "32000 Gasolina"
+        },
+        {
+            "codigo": "32000-4",
+            "nome": "32000 Elétrico"
+        },
+        {
+            "codigo": "2027-1",
+            "nome": "2027 Gasolina"
+        },
+        {
+            "codigo": "2026-6",
+            "nome": "2026 Híbrido"
+        },
+        {
+            "codigo": "2026-4",
+            "nome": "2026 Elétrico"
+        },
+        {
+            "codigo": "2025-4",
+            "nome": "2025 Elétrico"
+        }
+    ]
+}
