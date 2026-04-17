@@ -3,8 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: 'export',
   trailingSlash: true,
-  basePath: '/prevenindocomarte',
-  assetPrefix: '/prevenindocomarte',
+  basePath: process.env.NODE_ENV === 'production' ? '/prevenindocomarte' : '',
   images: {
     unoptimized: true,
   },

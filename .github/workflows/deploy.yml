@@ -20,23 +20,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+      
       - name: Install dependencies
         run: npm ci
+      
       - name: Build
         run: npm run build
-      - name: Prepare static pages artifact
-        run: |
-          mkdir -p out
-          cp -R public/* out/ 2>/dev/null || true
-          cp .next/server/app/*.html out/ 2>/dev/null || true
-          cp -R .next/server/pages/*.html out/ 2>/dev/null || true
-          mkdir -p out/_next
-          cp -R .next/static out/_next/static
+      
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

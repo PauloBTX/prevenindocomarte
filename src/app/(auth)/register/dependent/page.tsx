@@ -5,7 +5,7 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { ChevronLeft, Info, Plus, Trash2, ArrowRight, CheckCircle2, ArrowLeft, MapPin, Home, Loader2 } from "lucide-react";
+import { ChevronLeft, Info, Plus, Trash2, ArrowRight, CheckCircle2, ArrowLeft, MapPin, Home } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -18,35 +18,13 @@ import { PasswordStrengthInput } from "@/components/ui/password-strength-input";
 import { PhotoCropperModal } from "@/components/ui/photo-cropper-modal";
 import { REGISTRATION_CONFIG } from "@/config/registration";
 import { cn } from "@/lib/utils";
-import marcasVeiculos from "@/external/veiculos/marcas.json";
 
 const reqStr = (msg: string) => z.string().min(1, msg);
 
 const vehicleSchema = z.object({
-  brand: reqStr("Marca obrigatória"),
-  model: reqStr("Modelo obrigatório"),
-  plate: reqStr("Placa obrigatória").refine(
-    (val) => /^([A-Z]{3}[0-9][A-Z][0-9]{2}|[A-Z]{3}-?[0-9]{4})$/i.test(val),
-    "Placa inválida (Padrão ABC-1234 ou Mercosul ABC1D23)"
-  ),
-});
-
-const guardianSchema = z.object({
-  name: reqStr("Nome completo obrigatório")
-    .min(3, "Mínimo 3 caracteres")
-    .refine(val => val.trim().split(/\s+/).length >= 2, "Digite o nome e sobrenome"),
-  cpf: reqStr("CPF obrigatório").min(14, "CPF incompleto"),
-  birthDate: reqStr("Data de nascimento obrigatória")
-    .min(10, "Data incompleta")
-    .refine((val) => {
-      const birth = new Date(val);
-      const now = new Date();
-      const age = now.getFullYear() - birth.getFullYear();
-      const m = now.getMonth() - birth.getMonth();
-      const ageAdjusted = (m < 0 || (m === 0 && now.getDate() < birth.getDate())) ? age - 1 : age;
-      return ageAdjusted >= 16;
-    }, "A idade mínima para responsáveis é 16 anos"),
-  whatsapp: reqStr("WhatsApp obrigatório").min(14, "WhatsApp incompleto"),
+  brand: reqStr("Marca obrigatória").min(2, "Mínimo 2 caracteres"),
+  model: reqStr("Modelo obrigatório").min(2, "Mínimo 2 caracteres"),
+  plate: reqStr("Placa obrigatória").regex(/^[a-zA-Z]{3}-?[0-9][A-Za-z0-9][0-9]{2}$/, "Placa inválida (ex: ABC-1234)"),
 });
 
 const formSchema = z.object({
@@ -55,22 +33,10 @@ const formSchema = z.object({
     .min(3, "Mínimo 3 caracteres")
     .refine(val => val.trim().split(/\s+/).length >= 2, "Digite o nome e sobrenome"),
   cpf: reqStr("CPF obrigatório").min(14, "CPF incompleto"), // length with mask is 14
-  birthDate: reqStr("Data obrigatória")
-    .min(10, "Data incompleta")
-    .refine((val) => {
-      const birth = new Date(val);
-      const now = new Date();
-      const age = now.getFullYear() - birth.getFullYear();
-      const m = now.getMonth() - birth.getMonth();
-      const ageAdjusted = (m < 0 || (m === 0 && now.getDate() < birth.getDate())) ? age - 1 : age;
-      return ageAdjusted >= 4;
-    }, "A idade mínima para alunos é 4 anos"),
+  birthDate: reqStr("Data obrigatória").min(10, "Data incompleta"),
   whatsapp: reqStr("Telefone obrigatório").min(14, "Telefone incompleto"),
   email: reqStr("E-mail obrigatório").email("E-mail inválido"),
-  healthIssues: z.array(z.string()).default([]),
-  healthNotes: z.string().optional(),
-  usesMedication: z.boolean().default(false),
-  medicationDetails: z.string().optional(),
+  healthIssues: z.array(z.string()).optional(),
   password: reqStr("Senha de acesso obrigatória").min(6, "No mínimo 6 caracteres"),
   confirmPassword: reqStr("Confirmação de senha obrigatória").min(1, "Confirme sua senha"),
   needsParking: z.boolean().default(false),
@@ -78,7 +44,11 @@ const formSchema = z.object({
   acceptTerms: z.boolean().refine((val) => val === true, "Aceite obrigatório para aprovação"),
   acceptRules: z.boolean().refine((val) => val === true, "Aceite obrigatório para aprovação"),
   notes: z.string().optional(),
-  guardians: z.array(guardianSchema).min(1, "Adicione pelo menos um responsável").max(3),
+  
+  // Dependent fields
+  respName: reqStr("Nome do responsável obrigatório").refine(val => val.trim().split(/\s+/).length >= 2, "Digite nome e sobrenome"),
+  respCpf: reqStr("CPF do responsável obrigatório").min(14, "CPF incompleto"),
+  respWhatsapp: reqStr("WhatsApp do responsável obrigatório").min(14, "WhatsApp incompleto"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -96,10 +66,7 @@ export default function RegisterDependentPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const totalSteps = 7;
-
-  const [modelsByVehicle, setModelsByVehicle] = React.useState<Record<number, {codigo: number | string, nome: string}[]>>({});
-  const [loadingModels, setLoadingModels] = React.useState<Record<number, boolean>>({});
+  const totalSteps = 7; 
 
   const { register, handleSubmit, control, trigger, setValue, formState: { errors }, watch } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -113,18 +80,15 @@ export default function RegisterDependentPage() {
       password: "",
       confirmPassword: "",
       healthIssues: [],
-      healthNotes: "",
-      usesMedication: false,
-      medicationDetails: "",
       needsParking: false,
       acceptTerms: false,
       acceptRules: false,
       vehicles: [],
-      notes: "",
       videoPassword: "",
-      guardians: [
-        { name: "", cpf: "", birthDate: "", whatsapp: "" }
-      ],
+      notes: "",
+      respName: "",
+      respCpf: "",
+      respWhatsapp: "",
     }
   });
 
@@ -133,15 +97,10 @@ export default function RegisterDependentPage() {
     name: "vehicles",
   });
 
-  const { fields: guardians, append: appendGuardian, remove: removeGuardian } = useFieldArray({
-    control,
-    name: "guardians",
-  });
-
   const needsParking = watch("needsParking");
 
   // Formatters
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: any) => {
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "cpf" | "respCpf") => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
     value = value.replace(/(\d{3})(\d)/, "$1.$2");
@@ -150,7 +109,7 @@ export default function RegisterDependentPage() {
     setValue(fieldName, value, { shouldValidate: true, shouldDirty: true });
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: any) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "whatsapp" | "respWhatsapp") => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
     value = value.replace(/(\d{2})(\d)/, "($1) $2");
@@ -160,9 +119,10 @@ export default function RegisterDependentPage() {
 
   // File Upload states
   type UploadState = "idle" | "uploading" | "success";
-
-  // Guardian Documents
-  const [guardianDocs, setGuardianDocs] = React.useState<Array<{ file: File | null, state: UploadState }>>([{ file: null, state: "idle" }]);
+  
+  // Resp Document
+  const [respDocState, setRespDocState] = React.useState<UploadState>("idle");
+  const [respDocFile, setRespDocFile] = React.useState<File | null>(null);
 
   // Aluno Documents
   const [docState, setDocState] = React.useState<UploadState>("idle");
@@ -197,7 +157,7 @@ export default function RegisterDependentPage() {
   };
 
   const simulateUpload = (
-    file: File | null,
+    file: File | null, 
     setState: React.Dispatch<React.SetStateAction<UploadState>>,
     setFileState: React.Dispatch<React.SetStateAction<File | null>>
   ) => {
@@ -215,30 +175,6 @@ export default function RegisterDependentPage() {
   ) => {
     setState("idle");
     setFileState(null);
-  };
-
-  // Guardian doc handlers
-  const handleGuardianDocSelect = (index: number, file: File) => {
-    setGuardianDocs(prev => {
-      const next = [...prev];
-      next[index] = { file, state: "uploading" };
-      return next;
-    });
-    setTimeout(() => {
-      setGuardianDocs(prev => {
-        const next = [...prev];
-        if (next[index]) next[index].state = "success";
-        return next;
-      });
-    }, 1500);
-  };
-
-  const handleGuardianDocRemove = (index: number) => {
-    setGuardianDocs(prev => {
-      const next = [...prev];
-      next[index] = { file: null, state: "idle" };
-      return next;
-    });
   };
 
   const getYoutubeEmbedUrl = (url: string) => {
@@ -262,16 +198,13 @@ export default function RegisterDependentPage() {
       isStepValid = await trigger(["videoPassword"]);
     } else if (currentStep === 3) {
       isStepValid = await trigger([
-        "name", "cpf", "birthDate", "whatsapp", "email",
+        "name", "cpf", "birthDate", "whatsapp", "email", 
         "healthIssues", "password", "confirmPassword", "notes"
       ]);
     } else if (currentStep === 4) {
-      const valid = await trigger(["guardians"]);
-      
-      // Check if all guardians have documents
-      const missingDocs = guardians.some((_, i) => !guardianDocs[i]?.file);
-      if (missingDocs) {
-        setRespUploadError("Por favor, envie o documento com foto de todos os responsáveis.");
+      const valid = await trigger(["respName", "respCpf", "respWhatsapp"]);
+      if (!respDocFile) {
+        setRespUploadError("Por favor, envie o documento com foto do responsável.");
         isStepValid = false;
       } else {
         setRespUploadError("");
@@ -299,52 +232,18 @@ export default function RegisterDependentPage() {
     }
   };
 
-  const usesMedication = watch("usesMedication");
-
-  const handleBrandChange = async (index: number, brandCode: string) => {
-    if (!brandCode) {
-      setModelsByVehicle(prev => {
-        const next = { ...prev };
-        delete next[index];
-        return next;
-      });
-      setValue(`vehicles.${index}.model`, "");
-      return;
-    }
-
-    setLoadingModels(prev => ({ ...prev, [index]: true }));
-    try {
-      const data = await import(`@/external/veiculos/${brandCode}.json`);
-      const modelList = data.default?.modelos || data.modelos || [];
-      
-      setModelsByVehicle(prev => ({ ...prev, [index]: modelList }));
-      setValue(`vehicles.${index}.model`, "");
-    } catch (error) {
-      console.error("Erro ao carregar modelos:", error);
-      setModelsByVehicle(prev => ({ ...prev, [index]: [] }));
-    } finally {
-      setLoadingModels(prev => ({ ...prev, [index]: false }));
-    }
-  };
-
   const handlePrevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const onSubmit = (data: FormValues) => {
-    const missingStudentDocs = !docFile || !photoFile || !schoolFile || !addressFile;
-    const missingGuardianDocs = guardianDocs.some(gd => !gd.file);
-
-    if (missingStudentDocs || missingGuardianDocs) {
-      if (missingStudentDocs) setCurrentStep(6);
-      else setCurrentStep(4);
-      
-      setUploadError("Por favor, envie todos os documentos obrigatórios antes de finalizar.");
-      if (missingGuardianDocs) setRespUploadError("Por favor, envie o documento de todos os responsáveis.");
+    if (!docFile || !photoFile || !schoolFile || !addressFile) {
+      setCurrentStep(6);
+      setUploadError("Por favor, envie todos os 4 documentos obrigatórios antes de aceitar os termos.");
       return;
     }
-    console.log("Form data:", data, { docFile, photoFile, schoolFile, addressFile, guardianDocs });
+    console.log("Form data:", data, { docFile, photoFile, schoolFile, addressFile, respDocFile });
     setIsSuccess(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -356,9 +255,9 @@ export default function RegisterDependentPage() {
         {/* Header Success */}
         <div className="w-full bg-white h-16 shadow-xs flex items-center px-4 md:px-8 border-b">
           <div className="max-w-2xl w-full mx-auto flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => router.push("/")}
+            <button 
+              type="button" 
+              onClick={() => router.push("/")} 
               className="p-2 text-[#002855] hover:bg-slate-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -369,7 +268,7 @@ export default function RegisterDependentPage() {
 
         <div className="flex-1 w-full flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-md flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
-
+            
             <div className="relative mb-6 mt-10">
               <div className="w-32 h-32 rounded-full bg-green-100 flex items-center justify-center">
                 <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center text-white">
@@ -406,13 +305,13 @@ export default function RegisterDependentPage() {
               </div>
             </div>
 
-            <Button
-              type="button"
-              onClick={() => router.push("/login")}
+            <Button 
+              type="button" 
+              onClick={() => router.push("/login")} 
               variant="outline"
               className="mt-12 w-full h-14 border-2 border-[#002855] text-[#002855] text-lg font-bold rounded-2xl hover:bg-[#002855] hover:text-white"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               Voltar ao Início
             </Button>
           </div>
@@ -420,10 +319,10 @@ export default function RegisterDependentPage() {
 
         {/* Footer Success */}
         <div className="py-8 flex flex-col items-center text-center text-slate-500 text-sm space-y-2">
-          <p className="flex items-center justify-center gap-1.5">
-            <MapPin className="w-4 h-4" /> 4º Batalhão de Polícia Militar - Guará, DF
-          </p>
-          <p>© 2026 PMDF - Prevenindo com Arte</p>
+           <p className="flex items-center justify-center gap-1.5">
+             <MapPin className="w-4 h-4" /> 4º Batalhão de Polícia Militar - Guará, DF
+           </p>
+           <p>© 2026 PMDF - Prevenindo com Arte</p>
         </div>
       </div>
     );
@@ -439,24 +338,24 @@ export default function RegisterDependentPage() {
       <div className="w-full bg-[#002855] text-white pt-12 pb-6 px-4 md:px-8 relative shadow-md">
         <div className="max-w-2xl mx-auto flex flex-col gap-4">
           <div className="grid grid-cols-[3rem_1fr_3rem] items-center relative gap-2">
-            <button
-              type="button"
+            <button 
+              type="button" 
               title="Voltar"
               onClick={() => {
-                if (currentStep === 1) router.back();
+                if(currentStep === 1) router.back();
                 else handlePrevStep();
-              }}
+              }} 
               className="p-2 hover:bg-white/10 rounded-full transition-colors flex items-center justify-center justify-self-start"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
-
+            
             <h1 className="text-xl md:text-2xl font-bold tracking-wide text-center">Cadastro Para Dependente</h1>
 
-            <button
-              type="button"
+            <button 
+              type="button" 
               title="Voltar ao Login"
-              onClick={() => router.push("/login")}
+              onClick={() => router.push("/login")} 
               className="p-2 hover:bg-white/10 rounded-full transition-colors flex items-center justify-center justify-self-end text-white"
             >
               <Home className="w-6 h-6" />
@@ -474,10 +373,10 @@ export default function RegisterDependentPage() {
       <div className="w-full max-w-2xl px-4 mt-6">
         <div className="flex items-center w-full gap-2 mb-8">
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div
-              key={i}
+            <div 
+              key={i} 
               className={cn(
-                "h-2 w-full rounded-full transition-all duration-300",
+                "h-2 w-full rounded-full transition-all duration-300", 
                 i + 1 <= currentStep ? "bg-blue-600" : "bg-slate-200"
               )}
             />
@@ -485,7 +384,7 @@ export default function RegisterDependentPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
+          
           {/* STEP 1: Orientações */}
           {currentStep === 1 && (
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -496,7 +395,7 @@ export default function RegisterDependentPage() {
 
               <div className="space-y-4 text-slate-700 leading-relaxed">
                 <p>Para garantir sua vaga no programa, siga atentamente as etapas e os prazos abaixo:</p>
-
+                
                 <h3 className="font-bold text-slate-900 mt-6">1. Cronograma e Local</h3>
                 <ul className="list-disc pl-5 space-y-1">
                   <li><strong>Período:</strong> a partir de 20 de fevereiro de 2026.</li>
@@ -565,12 +464,12 @@ export default function RegisterDependentPage() {
               </div>
 
               <div className="aspect-video w-full rounded-xl overflow-hidden shadow-lg border bg-slate-900 relative">
-                <iframe
+                 <iframe 
                   className="w-full h-full absolute inset-0"
-                  src={getYoutubeEmbedUrl(REGISTRATION_CONFIG.videoUrl)}
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  src={getYoutubeEmbedUrl(REGISTRATION_CONFIG.videoUrl)} 
+                  title="YouTube video player" 
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                   allowFullScreen
                 ></iframe>
               </div>
@@ -582,11 +481,11 @@ export default function RegisterDependentPage() {
                     name="videoPassword"
                     control={control}
                     render={({ field }) => (
-                      <Input
-                        id="videoPassword"
-                        placeholder="Digite a senha..."
-                        {...field}
-                        className={cn("h-12 text-lg", errors.videoPassword && "border-red-500")}
+                      <Input 
+                        id="videoPassword" 
+                        placeholder="Digite a senha..." 
+                        {...field} 
+                        className={cn("h-12 text-lg", errors.videoPassword && "border-red-500")} 
                       />
                     )}
                   />
@@ -608,7 +507,7 @@ export default function RegisterDependentPage() {
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Dados Pessoais Do Aluno</h2>
-
+                
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="name">Nome Completo *</Label>
@@ -623,15 +522,15 @@ export default function RegisterDependentPage() {
                         name="cpf"
                         control={control}
                         render={({ field }) => (
-                          <Input
+                          <Input 
                             {...field}
-                            id="cpf"
-                            placeholder="000.000.000-00"
+                            id="cpf" 
+                            placeholder="000.000.000-00" 
                             maxLength={14}
                             onChange={(e) => {
                               handleCpfChange(e, "cpf");
                             }}
-                            className={errors.cpf ? "border-red-500" : ""}
+                            className={errors.cpf ? "border-red-500" : ""} 
                           />
                         )}
                       />
@@ -651,15 +550,15 @@ export default function RegisterDependentPage() {
                         name="whatsapp"
                         control={control}
                         render={({ field }) => (
-                          <Input
+                          <Input 
                             {...field}
-                            id="whatsapp"
-                            placeholder="(00) 00000-0000"
+                            id="whatsapp" 
+                            placeholder="(00) 00000-0000" 
                             maxLength={15}
                             onChange={(e) => {
                               handlePhoneChange(e, "whatsapp");
                             }}
-                            className={errors.whatsapp ? "border-red-500" : ""}
+                            className={errors.whatsapp ? "border-red-500" : ""} 
                           />
                         )}
                       />
@@ -679,12 +578,12 @@ export default function RegisterDependentPage() {
                     name="notes"
                     control={control}
                     render={({ field }) => (
-                      <textarea
-                        id="notes"
-                        placeholder="Escreva alguma observação, se houver..."
-                        className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        {...field}
-                      />
+                       <textarea 
+                         id="notes" 
+                         placeholder="Escreva alguma observação, se houver..." 
+                         className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                         {...field}
+                       />
                     )}
                   />
                   {errors.notes && <p className="text-xs text-red-500">{errors.notes.message}</p>}
@@ -692,31 +591,15 @@ export default function RegisterDependentPage() {
               </div>
 
               <div className="space-y-5">
-                <div className="space-y-1">
-                  <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Saúde do Aluno</h2>
-                  <p className="text-sm text-slate-500 font-medium">Marque apenas as condições que tiver</p>
-                </div>
-
+                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Saúde do Aluno</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    "Hipertensão",
-                    "Diabetes",
-                    "Problemas Cardíacos",
-                    "Asma",
-                    "Epilepsia / convulsões",
-                    "Alergias (alimentares, medicamentos, picadas, etc.)",
-                    "Problemas respiratórios (além de asma)",
-                    "Problemas neurológicos",
-                    "Problemas ortopédicos (joelho, coluna, etc.)",
-                    "Transtornos psicológicos (ansiedade, TDAH, depressão)",
-                    "Deficiências (auditiva, visual, motora, intelectual)"
-                  ].map((item, i) => (
+                  {["Hipertensão", "Diabetes", "Problemas Cardíacos", "Asma", "Nenhuma condição"].map((item, i) => (
                     <div key={item} className="flex flex-row items-center space-x-3 text-sm">
                       <Controller
                         control={control}
                         name="healthIssues"
                         render={({ field }) => (
-                          <Checkbox
+                          <Checkbox 
                             id={`health-${i}`}
                             className={checkboxOverrideClasses}
                             checked={field.value?.includes(item)}
@@ -736,55 +619,6 @@ export default function RegisterDependentPage() {
                       </Label>
                     </div>
                   ))}
-                </div>
-
-                <div className="space-y-1.5 pt-2">
-                  <Label htmlFor="healthNotes">Observações sobre sua saúde</Label>
-                  <Controller
-                    name="healthNotes"
-                    control={control}
-                    render={({ field }) => (
-                      <textarea
-                        id="healthNotes"
-                        placeholder="Caso tenha alguma condição não listada ou detalhes importantes..."
-                        className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        {...field}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex flex-row items-center space-x-3">
-                    <Controller
-                      name="usesMedication"
-                      control={control}
-                      render={({ field }) => (
-                        <Checkbox
-                          id="usesMedication"
-                          className={checkboxOverrideClasses}
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      )}
-                    />
-                    <Label htmlFor="usesMedication" className="text-base font-semibold text-slate-800 cursor-pointer">
-                      Faz uso contínuo de medicamentos?
-                    </Label>
-                  </div>
-
-                  {usesMedication && (
-                    <div className="pl-8 animate-in fade-in slide-in-from-left-2 duration-300">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="medicationDetails">Qual(is)</Label>
-                        <Input
-                          id="medicationDetails"
-                          placeholder="Liste os medicamentos que utiliza"
-                          {...register("medicationDetails")}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -810,12 +644,12 @@ export default function RegisterDependentPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Repita sua senha"
-                      {...register("confirmPassword")}
-                      className={errors.confirmPassword ? "border-red-500" : ""}
+                    <Input 
+                      id="confirmPassword" 
+                      type="password" 
+                      placeholder="Repita sua senha" 
+                      {...register("confirmPassword")} 
+                      className={errors.confirmPassword ? "border-red-500" : ""} 
                     />
                     {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>}
                   </div>
@@ -835,131 +669,78 @@ export default function RegisterDependentPage() {
           {currentStep === 4 && (
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-5">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <h2 className="text-xl font-bold text-slate-800">Dados Do(s) Responsável(eis)</h2>
-                  {guardians.length < 3 && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => {
-                        appendGuardian({ name: "", cpf: "", birthDate: "", whatsapp: "" });
-                        setGuardianDocs(prev => [...prev, { file: null, state: "idle" }]);
-                      }}
-                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> Adicionar Outro
-                    </Button>
-                  )}
-                </div>
-
-                <div className="space-y-8">
-                  {guardians.map((field, index) => (
-                    <div key={field.id} className="relative p-5 border rounded-xl bg-slate-50/30 space-y-4">
-                      <div className="flex justify-between items-center border-b pb-2">
-                        <h3 className="font-bold text-slate-700">Responsável {index + 1}</h3>
-                        {guardians.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              removeGuardian(index);
-                              setGuardianDocs(prev => prev.filter((_, i) => i !== index));
-                            }}
-                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg flex items-center text-sm ml-auto font-medium"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" /> Remover
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-1.5">
-                          <Label htmlFor={`guardians.${index}.name`}>Nome Completo *</Label>
-                          <Input 
-                            id={`guardians.${index}.name`} 
-                            placeholder="Nome e Sobrenome do Responsável" 
-                            {...register(`guardians.${index}.name` as const)} 
-                            className={errors.guardians?.[index]?.name ? "border-red-500" : ""} 
-                          />
-                          {errors.guardians?.[index]?.name && <p className="text-xs text-red-500">{errors.guardians[index]?.name?.message}</p>}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <Label htmlFor={`guardians.${index}.cpf`}>CPF do Responsável *</Label>
-                            <Controller
-                              name={`guardians.${index}.cpf`}
-                              control={control}
-                              render={({ field }) => (
-                                <Input
-                                  {...field}
-                                  id={`guardians.${index}.cpf`}
-                                  placeholder="000.000.000-00"
-                                  maxLength={14}
-                                  onChange={(e) => {
-                                    handleCpfChange(e, `guardians.${index}.cpf`);
-                                  }}
-                                  className={errors.guardians?.[index]?.cpf ? "border-red-500" : ""}
-                                />
-                              )}
-                            />
-                            {errors.guardians?.[index]?.cpf && <p className="text-xs text-red-500">{errors.guardians[index]?.cpf?.message}</p>}
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor={`guardians.${index}.birthDate`}>Data de Nascimento *</Label>
-                            <Input 
-                              id={`guardians.${index}.birthDate`} 
-                              type="date" 
-                              {...register(`guardians.${index}.birthDate` as const)} 
-                              className={errors.guardians?.[index]?.birthDate ? "border-red-500" : ""} 
-                            />
-                            {errors.guardians?.[index]?.birthDate && <p className="text-xs text-red-500">{errors.guardians[index]?.birthDate?.message}</p>}
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor={`guardians.${index}.whatsapp`}>WhatsApp / Telefone *</Label>
-                            <Controller
-                              name={`guardians.${index}.whatsapp`}
-                              control={control}
-                              render={({ field }) => (
-                                <Input
-                                  {...field}
-                                  id={`guardians.${index}.whatsapp`}
-                                  placeholder="(00) 00000-0000"
-                                  maxLength={15}
-                                  onChange={(e) => {
-                                    handlePhoneChange(e, `guardians.${index}.whatsapp`);
-                                  }}
-                                  className={errors.guardians?.[index]?.whatsapp ? "border-red-500" : ""}
-                                />
-                              )}
-                            />
-                            {errors.guardians?.[index]?.whatsapp && <p className="text-xs text-red-500">{errors.guardians[index]?.whatsapp?.message}</p>}
-                          </div>
-                        </div>
-
-                        <div className="pt-2">
-                          <Label className="block mb-2 font-medium">Documento com foto do responsável {index + 1} *</Label>
-                          <FileUploadCard
-                            title="Documento Oficial"
-                            description="RG, CNH, Passaporte etc."
-                            variant={guardianDocs[index]?.state || "idle"}
-                            fileName={guardianDocs[index]?.file?.name}
-                            progress={100}
-                            onFileSelect={(f) => handleGuardianDocSelect(index, f)}
-                            onFileRemove={() => handleGuardianDocRemove(index)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {respUploadError && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mt-4 flex items-center">
-                    <Info className="w-5 h-5 mr-2" />
-                    {respUploadError}
+                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Dados Do Responsável</h2>
+                
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="respName">Nome Completo *</Label>
+                    <Input id="respName" placeholder="Nome e Sobrenome do Responsável" {...register("respName")} className={errors.respName ? "border-red-500" : ""} />
+                    {errors.respName && <p className="text-xs text-red-500">{errors.respName.message}</p>}
                   </div>
-                )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="respCpf">CPF do Responsável *</Label>
+                      <Controller
+                        name="respCpf"
+                        control={control}
+                        render={({ field }) => (
+                          <Input 
+                            {...field}
+                            id="respCpf" 
+                            placeholder="000.000.000-00" 
+                            maxLength={14}
+                            onChange={(e) => {
+                              handleCpfChange(e, "respCpf");
+                            }}
+                            className={errors.respCpf ? "border-red-500" : ""} 
+                          />
+                        )}
+                      />
+                      {errors.respCpf && <p className="text-xs text-red-500">{errors.respCpf.message}</p>}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="respWhatsapp">WhatsApp / Telefone *</Label>
+                      <Controller
+                        name="respWhatsapp"
+                        control={control}
+                        render={({ field }) => (
+                          <Input 
+                            {...field}
+                            id="respWhatsapp" 
+                            placeholder="(00) 00000-0000" 
+                            maxLength={15}
+                            onChange={(e) => {
+                              handlePhoneChange(e, "respWhatsapp");
+                            }}
+                            className={errors.respWhatsapp ? "border-red-500" : ""} 
+                          />
+                        )}
+                      />
+                      {errors.respWhatsapp && <p className="text-xs text-red-500">{errors.respWhatsapp.message}</p>}
+                    </div>
+                  </div>
+
+                  {respUploadError && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mt-4 flex items-center">
+                      <Info className="w-5 h-5 mr-2" />
+                      {respUploadError}
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <Label className="block mb-2 font-medium">Documento com foto do responsável *</Label>
+                    <FileUploadCard 
+                      title="Documento Oficial" 
+                      description="RG, CNH, Passaporte etc." 
+                      variant={respDocState}
+                      fileName={respDocFile?.name}
+                      progress={100}
+                      onFileSelect={(f) => simulateUpload(f, setRespDocState, setRespDocFile)}
+                      onFileRemove={() => removeUpload(setRespDocState, setRespDocFile)}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 flex justify-between">
@@ -998,83 +779,43 @@ export default function RegisterDependentPage() {
                 <div className="space-y-6 mt-4">
                   {vehicles.map((field, index) => (
                     <div key={field.id} className="relative p-5 border rounded-xl bg-white space-y-4">
-                      <div className="flex justify-between items-center border-b pb-2">
-                        <h3 className="font-bold text-slate-700">Veículo {index + 1}</h3>
-                        <button
-                          type="button"
-                          onClick={() => removeVehicle(index)}
-                          className="text-red-500 hover:bg-red-50 p-2 rounded-lg flex items-center text-sm ml-auto font-medium"
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" /> Remover
-                        </button>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="space-y-1">
-                          <Label className="text-sm font-medium">Marca *</Label>
-                          <Controller
-                            control={control}
-                            name={`vehicles.${index}.brand`}
-                            render={({ field }) => (
-                              <select
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  handleBrandChange(index, e.target.value);
-                                }}
-                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <option value="">Selecione a marca</option>
-                                {marcasVeiculos.map((m) => (
-                                  <option key={m.codigo} value={m.codigo}>{m.nome}</option>
-                                ))}
-                              </select>
-                            )}
-                          />
-                          {errors.vehicles?.[index]?.brand && <p className="text-xs text-red-500">{errors.vehicles[index]?.brand?.message}</p>}
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-sm font-medium flex items-center gap-2">
-                            Modelo *
-                            {loadingModels[index] && <Loader2 className="w-3 h-3 animate-spin text-blue-600" />}
-                          </Label>
-                          <Controller
-                            control={control}
-                            name={`vehicles.${index}.model`}
-                            render={({ field }) => (
-                              <select
-                                {...field}
-                                disabled={!watch(`vehicles.${index}.brand`) || loadingModels[index]}
-                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <option value="">{loadingModels[index] ? "Carregando..." : "Selecione o modelo"}</option>
-                                {(modelsByVehicle[index] || []).map((mod) => (
-                                  <option key={mod.codigo} value={mod.nome}>{mod.nome}</option>
-                                ))}
-                              </select>
-                            )}
-                          />
-                          {errors.vehicles?.[index]?.model && <p className="text-xs text-red-500">{errors.vehicles[index]?.model?.message}</p>}
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-sm font-medium">Placa *</Label>
-                          <Input 
-                            placeholder="ABC-1234 ou ABC1D23" 
-                            {...register(`vehicles.${index}.plate` as const)} 
-                            className={cn("uppercase", errors.vehicles?.[index]?.plate && "border-red-500")}
-                          />
-                          {errors.vehicles?.[index]?.plate && <p className="text-xs text-red-500">{errors.vehicles[index]?.plate?.message}</p>}
-                        </div>
-                      </div>
+                       <div className="flex justify-between items-center border-b pb-2">
+                         <h3 className="font-bold text-slate-700">Veículo {index + 1}</h3>
+                         <button
+                            type="button"
+                            onClick={() => removeVehicle(index)}
+                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg flex items-center text-sm ml-auto font-medium"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Remover
+                          </button>
+                       </div>
+                       
+                       <div className="space-y-3">
+                         <div className="space-y-1">
+                           <Label className="text-sm font-medium">Marca *</Label>
+                           <Input placeholder="Ex: Volkswagen" {...register(`vehicles.${index}.brand` as const)} />
+                           {errors.vehicles?.[index]?.brand && <p className="text-xs text-red-500">{errors.vehicles[index]?.brand?.message}</p>}
+                         </div>
+                         <div className="space-y-1">
+                           <Label className="text-sm font-medium">Modelo *</Label>
+                           <Input placeholder="Ex: Gol" {...register(`vehicles.${index}.model` as const)} />
+                           {errors.vehicles?.[index]?.model && <p className="text-xs text-red-500">{errors.vehicles[index]?.model?.message}</p>}
+                         </div>
+                         <div className="space-y-1">
+                           <Label className="text-sm font-medium">Placa *</Label>
+                           <Input placeholder="ABC-1234" {...register(`vehicles.${index}.plate` as const)} className="uppercase" />
+                           {errors.vehicles?.[index]?.plate && <p className="text-xs text-red-500">{errors.vehicles[index]?.plate?.message}</p>}
+                         </div>
+                       </div>
                     </div>
                   ))}
 
                   {errors.vehicles && !Array.isArray(errors.vehicles) && <p className="text-sm text-red-500 text-center font-medium">{errors.vehicles.message}</p>}
 
                   {vehicles.length < 3 && (
-                    <Button
-                      type="button"
-                      variant="outline"
+                    <Button 
+                      type="button" 
+                      variant="outline" 
                       onClick={() => appendVehicle({ brand: "", model: "", plate: "" })}
                       className="w-full border-dashed border-2 py-6 text-blue-600 hover:bg-blue-50"
                     >
@@ -1101,7 +842,7 @@ export default function RegisterDependentPage() {
                   <h2 className="text-xl font-bold text-slate-800">Documentos Obrigatórios do Aluno</h2>
                   <Info className="h-5 w-5 text-slate-400" />
                 </div>
-
+                
                 {uploadError && (
                   <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4 flex items-center">
                     <Info className="w-5 h-5 mr-2" />
@@ -1110,36 +851,36 @@ export default function RegisterDependentPage() {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FileUploadCard
-                    title="Documento Oficial *"
-                    description="RG, CNH, Passaporte."
+                  <FileUploadCard 
+                    title="Documento Oficial *" 
+                    description="RG, CNH, Passaporte." 
                     variant={docState}
                     fileName={docFile?.name}
                     progress={65}
                     onFileSelect={(f) => simulateUpload(f, setDocState, setDocFile)}
                     onFileRemove={() => removeUpload(setDocState, setDocFile)}
                   />
-                  <FileUploadCard
-                    title="Foto 3x4 *"
-                    description="Foto de rosto recente."
+                  <FileUploadCard 
+                    title="Foto 3x4 *" 
+                    description="Foto de rosto recente." 
                     variant={photoState}
                     fileName={photoFile?.name}
                     progress={100}
                     onFileSelect={handlePhotoSelect}
                     onFileRemove={() => removeUpload(setPhotoState, setPhotoFile)}
                   />
-                  <FileUploadCard
-                    title="Comprovante de Escolaridade *"
-                    description="Declaração de matricula válida."
+                  <FileUploadCard 
+                    title="Comprovante de Escolaridade *" 
+                    description="Declaração de matricula válida." 
                     variant={schoolState}
                     fileName={schoolFile?.name}
                     progress={88}
                     onFileSelect={(f) => simulateUpload(f, setSchoolState, setSchoolFile)}
                     onFileRemove={() => removeUpload(setSchoolState, setSchoolFile)}
                   />
-                  <FileUploadCard
-                    title="Comprovante de Residência *"
-                    description="Conta de água, luz, etc."
+                  <FileUploadCard 
+                    title="Comprovante de Residência *" 
+                    description="Conta de água, luz, etc." 
                     variant={addressState}
                     fileName={addressFile?.name}
                     progress={30}
@@ -1161,7 +902,7 @@ export default function RegisterDependentPage() {
           {/* STEP 7: Termos e Conclusão */}
           {currentStep === 7 && (
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-
+              
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Termos e Condições</h2>
                 <div className="flex flex-row items-center space-x-3 text-base">
@@ -1217,7 +958,7 @@ export default function RegisterDependentPage() {
         </form>
       </div>
 
-      <PhotoCropperModal
+      <PhotoCropperModal 
         open={isCropperOpen}
         imageSrc={tempPhotoUrl}
         onClose={() => setIsCropperOpen(false)}
