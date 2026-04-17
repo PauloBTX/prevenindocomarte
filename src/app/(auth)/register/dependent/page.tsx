@@ -328,7 +328,7 @@ export default function RegisterDependentPage() {
       setUploadError("Por favor, envie todos os 4 documentos obrigatórios antes de aceitar os termos.");
       return;
     }
-    console.log("Form data:", data, { docFile, photoFile, schoolFile, addressFile, respDocFile });
+    console.log("Form data:", data, { docFile, photoFile, schoolFile, addressFile, respDocFiles });
     setIsSuccess(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
