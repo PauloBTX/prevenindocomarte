@@ -231,8 +231,8 @@ export default function RegisterDependentPage() {
 
   const simulateUpload = (
     file: File | null, 
-    setState: React.Dispatch<React.SetStateAction<UploadState>>,
-    setFileState: React.Dispatch<React.SetStateAction<File | null>>
+    setState: (s: UploadState) => void,
+    setFileState: (f: File | null) => void
   ) => {
     if (!file) return;
     setState("uploading");
@@ -243,8 +243,8 @@ export default function RegisterDependentPage() {
   };
 
   const removeUpload = (
-    setState: React.Dispatch<React.SetStateAction<UploadState>>,
-    setFileState: React.Dispatch<React.SetStateAction<File | null>>
+    setState: (s: UploadState) => void,
+    setFileState: (f: File | null) => void
   ) => {
     setState("idle");
     setFileState(null);
