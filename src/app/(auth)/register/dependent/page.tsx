@@ -173,6 +173,9 @@ export default function RegisterDependentPage() {
     setValue(fieldName as any, value, { shouldValidate: true, shouldDirty: true });
   };
 
+  // File Upload states
+  type UploadState = "idle" | "uploading" | "success";
+
   // Resp Documents
   const [respDocStates, setRespDocStates] = React.useState<UploadState[]>(["idle"]);
   const [respDocFiles, setRespDocFiles] = React.useState<(File | null)[]>([null]);
