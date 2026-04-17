@@ -7,6 +7,7 @@ import * as z from "zod";
 import Link from "next/link";
 import { ChevronLeft, Info, Plus, Trash2, ArrowRight, CheckCircle2, ArrowLeft, MapPin, Home } from "lucide-react";
 import { useRouter } from "next/navigation";
+import marcas from "@/external/veiculos/marcas.json";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,13 @@ const reqStr = (msg: string) => z.string().min(1, msg);
 const vehicleSchema = z.object({
   brand: reqStr("Marca obrigatória").min(2, "Mínimo 2 caracteres"),
   model: reqStr("Modelo obrigatório").min(2, "Mínimo 2 caracteres"),
-  plate: reqStr("Placa obrigatória").regex(/^[a-zA-Z]{3}-?[0-9][A-Za-z0-9][0-9]{2}$/, "Placa inválida (ex: ABC-1234)"),
+  plate: reqStr("Placa obrigatória").regex(/^([a-zA-Z]{3}-?[0-9]{4}|[a-zA-Z]{3}[0-9][a-zA-Z][0-9]{2}|[a-zA-Z]{3}[0-9]{2}[a-zA-Z][0-9])$/, "Placa inválida (ex: ABC-1234 ou ABC1D23)"),
+});
+
+const guardianSchema = z.object({
+  name: reqStr("Nome do responsável obrigatório").refine(val => val.trim().split(/\s+/).length >= 2, "Digite nome e sobrenome"),
+  cpf: reqStr("CPF do responsável obrigatório").min(14, "CPF incompleto"),
+  whatsapp: reqStr("WhatsApp do responsável obrigatório").min(14, "WhatsApp incompleto"),
 });
 
 const formSchema = z.object({
@@ -37,6 +44,14 @@ const formSchema = z.object({
   whatsapp: reqStr("Telefone obrigatório").min(14, "Telefone incompleto"),
   email: reqStr("E-mail obrigatório").email("E-mail inválido"),
   healthIssues: z.array(z.string()).optional(),
+  healthObservations: z.string().optional(),
+  medicationContinuous: z.boolean().default(false),
+  medicationList: z.string().optional(),
+  medicationDuringClass: z.boolean().default(false),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  emergencyHealthPlan: z.string().optional(),
+  emergencyHospital: z.string().optional(),
   password: reqStr("Senha de acesso obrigatória").min(6, "No mínimo 6 caracteres"),
   confirmPassword: reqStr("Confirmação de senha obrigatória").min(1, "Confirme sua senha"),
   needsParking: z.boolean().default(false),
@@ -46,18 +61,28 @@ const formSchema = z.object({
   notes: z.string().optional(),
   
   // Dependent fields
-  respName: reqStr("Nome do responsável obrigatório").refine(val => val.trim().split(/\s+/).length >= 2, "Digite nome e sobrenome"),
-  respCpf: reqStr("CPF do responsável obrigatório").min(14, "CPF incompleto"),
-  respWhatsapp: reqStr("WhatsApp do responsável obrigatório").min(14, "WhatsApp incompleto"),
+  guardians: z.array(guardianSchema).min(1, "Adicione ao menos um responsável").max(3),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
+}).refine((data) => {
+  if (data.emergencyContactName && (!data.emergencyContactPhone || data.emergencyContactPhone.trim() === "")) return false;
+  return true;
+}, {
+  message: "Telefone de emergência obrigatório ao informar o acompanhante",
+  path: ["emergencyContactPhone"],
 }).refine((data) => {
   if (data.needsParking && (!data.vehicles || data.vehicles.length === 0)) return false;
   return true;
 }, {
   message: "Adicione ao menos 1 veículo",
   path: ["vehicles"],
+}).refine((data) => {
+  if (data.medicationContinuous && (!data.medicationList || data.medicationList.trim() === "")) return false;
+  return true;
+}, {
+  message: "Informe qual(is) medicamento(s)",
+  path: ["medicationList"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -80,15 +105,21 @@ export default function RegisterDependentPage() {
       password: "",
       confirmPassword: "",
       healthIssues: [],
+      healthObservations: "",
+      medicationContinuous: false,
+      medicationList: "",
+      medicationDuringClass: false,
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      emergencyHealthPlan: "",
+      emergencyHospital: "",
       needsParking: false,
       acceptTerms: false,
       acceptRules: false,
       vehicles: [],
       videoPassword: "",
       notes: "",
-      respName: "",
-      respCpf: "",
-      respWhatsapp: "",
+      guardians: [{ name: "", cpf: "", whatsapp: "" }],
     }
   });
 
@@ -97,32 +128,71 @@ export default function RegisterDependentPage() {
     name: "vehicles",
   });
 
+  const { fields: guardians, append: appendGuardian, remove: removeGuardian } = useFieldArray({
+    control,
+    name: "guardians",
+  });
+
+  const [modelsByVehicle, setModelsByVehicle] = React.useState<Record<number, any[]>>({});
+
+  const handleBrandChange = async (brandName: string, index: number) => {
+    setValue(`vehicles.${index}.brand`, brandName);
+    setValue(`vehicles.${index}.model`, ""); // Reset model
+    
+    const brand = marcas.find(m => m.nome === brandName);
+    if (brand) {
+      try {
+        const data = await import(`@/external/veiculos/${brand.codigo}.json`);
+        setModelsByVehicle(prev => ({ ...prev, [index]: data.modelos }));
+      } catch (e) {
+        console.error("Error loading models:", e);
+        setModelsByVehicle(prev => ({ ...prev, [index]: [] }));
+      }
+    } else {
+      setModelsByVehicle(prev => ({ ...prev, [index]: [] }));
+    }
+  };
+
   const needsParking = watch("needsParking");
 
   // Formatters
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "cpf" | "respCpf") => {
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
     value = value.replace(/(\d{3})(\d)/, "$1.$2");
     value = value.replace(/(\d{3})(\d)/, "$1.$2");
     value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    setValue(fieldName, value, { shouldValidate: true, shouldDirty: true });
+    setValue(fieldName as any, value, { shouldValidate: true, shouldDirty: true });
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "whatsapp" | "respWhatsapp") => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
     value = value.replace(/(\d{2})(\d)/, "($1) $2");
     value = value.replace(/(\d{4,5})(\d{4})$/, "$1-$2");
-    setValue(fieldName, value, { shouldValidate: true, shouldDirty: true });
+    setValue(fieldName as any, value, { shouldValidate: true, shouldDirty: true });
   };
 
-  // File Upload states
-  type UploadState = "idle" | "uploading" | "success";
-  
-  // Resp Document
-  const [respDocState, setRespDocState] = React.useState<UploadState>("idle");
-  const [respDocFile, setRespDocFile] = React.useState<File | null>(null);
+  // Resp Documents
+  const [respDocStates, setRespDocStates] = React.useState<UploadState[]>(["idle"]);
+  const [respDocFiles, setRespDocFiles] = React.useState<(File | null)[]>([null]);
+  const [respUploadErrors, setRespUploadErrors] = React.useState<string[]>([""]);
+
+  const setRespDocStateAtIndex = (index: number, state: UploadState) => {
+    setRespDocStates(prev => {
+      const next = [...prev];
+      next[index] = state;
+      return next;
+    });
+  };
+
+  const setRespDocFileAtIndex = (index: number, file: File | null) => {
+    setRespDocFiles(prev => {
+      const next = [...prev];
+      next[index] = file;
+      return next;
+    });
+  };
 
   // Aluno Documents
   const [docState, setDocState] = React.useState<UploadState>("idle");
@@ -199,15 +269,27 @@ export default function RegisterDependentPage() {
     } else if (currentStep === 3) {
       isStepValid = await trigger([
         "name", "cpf", "birthDate", "whatsapp", "email", 
-        "healthIssues", "password", "confirmPassword", "notes"
+        "healthIssues", "healthObservations",
+        "medicationContinuous", "medicationList", "medicationDuringClass",
+        "emergencyContactName", "emergencyContactPhone", "emergencyHealthPlan", "emergencyHospital",
+        "password", "confirmPassword", "notes"
       ]);
     } else if (currentStep === 4) {
-      const valid = await trigger(["respName", "respCpf", "respWhatsapp"]);
-      if (!respDocFile) {
-        setRespUploadError("Por favor, envie o documento com foto do responsável.");
+      const valid = await trigger(["guardians"]);
+      const allDocsUploaded = respDocFiles.every((file, idx) => idx >= guardians.length || file !== null);
+      
+      if (!allDocsUploaded) {
+        setRespUploadErrors(prev => {
+          const next = [...prev];
+          guardians.forEach((_, i) => {
+            if (!respDocFiles[i]) next[i] = "Por favor, envie o documento com foto deste responsável.";
+            else next[i] = "";
+          });
+          return next;
+        });
         isStepValid = false;
       } else {
-        setRespUploadError("");
+        setRespUploadErrors(guardians.map(() => ""));
         isStepValid = valid;
       }
     } else if (currentStep === 5) {
@@ -593,7 +675,19 @@ export default function RegisterDependentPage() {
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Saúde do Aluno</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Hipertensão", "Diabetes", "Problemas Cardíacos", "Asma", "Nenhuma condição"].map((item, i) => (
+                  {[
+                    "Hipertensão", 
+                    "Diabetes", 
+                    "Problemas Cardíacos", 
+                    "Asma", 
+                    "Epilepsia / convulsões",
+                    "Alergias (alimentares, medicamentos, picadas, etc.)",
+                    "Problemas respiratórios (além de asma)",
+                    "Problemas neurológicos",
+                    "Problemas ortopédicos (joelho, coluna, etc.)",
+                    "Transtornos psicológicos (ansiedade, TDAH, depressão)",
+                    "Deficiências (auditiva, visual, motora, intelectual)"
+                  ].map((item, i) => (
                     <div key={item} className="flex flex-row items-center space-x-3 text-sm">
                       <Controller
                         control={control}
@@ -619,6 +713,134 @@ export default function RegisterDependentPage() {
                       </Label>
                     </div>
                   ))}
+                </div>
+
+                <div className="space-y-1.5 mt-4">
+                  <Label htmlFor="healthObservations">Observações sobre a saúde</Label>
+                  <Controller
+                    name="healthObservations"
+                    control={control}
+                    render={({ field }) => (
+                       <textarea 
+                         id="healthObservations" 
+                         placeholder="Informe detalhes sobre as condições marcadas acima ou outras informações relevantes..." 
+                         className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                         {...field}
+                       />
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Uso de Medicamentos</h2>
+                <div className="space-y-4">
+                  <div className="flex flex-row items-center justify-between p-4 border rounded-xl border-slate-200 bg-slate-50/50">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="medicationContinuous" className="text-base font-semibold text-slate-800 cursor-pointer">Uso contínuo de medicamentos?</Label>
+                      <p className="text-sm text-muted-foreground">Informe se o aluno utiliza medicação regularmente.</p>
+                    </div>
+                    <Controller
+                      control={control}
+                      name="medicationContinuous"
+                      render={({ field }) => (
+                        <Switch 
+                          id="medicationContinuous" 
+                          className={switchOverrideClasses} 
+                          checked={field.value ?? false} 
+                          onCheckedChange={field.onChange} 
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {watch("medicationContinuous") && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="medicationList">Qual(is)? *</Label>
+                        <Input 
+                          id="medicationList" 
+                          placeholder="Nome dos medicamentos" 
+                          {...register("medicationList")} 
+                          className={errors.medicationList ? "border-red-500" : ""}
+                        />
+                        {errors.medicationList && <p className="text-xs text-red-500">{errors.medicationList.message}</p>}
+                      </div>
+
+                      <div className="flex flex-row items-center justify-between p-4 border rounded-xl border-slate-200">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="medicationDuringClass" className="text-sm font-medium text-slate-800 cursor-pointer">Precisa tomar durante o período da aula?</Label>
+                        </div>
+                        <Controller
+                          control={control}
+                          name="medicationDuringClass"
+                          render={({ field }) => (
+                            <Switch 
+                              id="medicationDuringClass" 
+                              className={switchOverrideClasses} 
+                              checked={field.value ?? false} 
+                              onCheckedChange={field.onChange} 
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Emergência</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyContactName">Nome do acompanhante (opcional)</Label>
+                    <Input 
+                      id="emergencyContactName" 
+                      placeholder="Nome completo do contato" 
+                      {...register("emergencyContactName")} 
+                      className={errors.emergencyContactName ? "border-red-500" : ""}
+                    />
+                    {errors.emergencyContactName && <p className="text-xs text-red-500">{errors.emergencyContactName.message}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyContactPhone">Telefone de emergência {watch("emergencyContactName") ? "*" : "(opcional)"}</Label>
+                    <Controller
+                      name="emergencyContactPhone"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          {...field}
+                          id="emergencyContactPhone" 
+                          placeholder="(00) 00000-0000" 
+                          maxLength={15}
+                          onChange={(e) => {
+                            handlePhoneChange(e, "emergencyContactPhone");
+                          }}
+                          className={errors.emergencyContactPhone ? "border-red-500" : ""} 
+                        />
+                      )}
+                    />
+                    {errors.emergencyContactPhone && <p className="text-xs text-red-500">{errors.emergencyContactPhone.message}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyHealthPlan">Convênio/plano de saúde (opcional)</Label>
+                    <Input 
+                      id="emergencyHealthPlan" 
+                      placeholder="Nome do plano, se houver" 
+                      {...register("emergencyHealthPlan")} 
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyHospital">Hospital de preferência (opcional)</Label>
+                    <Input 
+                      id="emergencyHospital" 
+                      placeholder="Nome do hospital preferencial" 
+                      {...register("emergencyHospital")} 
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -669,77 +891,124 @@ export default function RegisterDependentPage() {
           {currentStep === 4 && (
             <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-5">
-                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Dados Do Responsável</h2>
-                
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="respName">Nome Completo *</Label>
-                    <Input id="respName" placeholder="Nome e Sobrenome do Responsável" {...register("respName")} className={errors.respName ? "border-red-500" : ""} />
-                    {errors.respName && <p className="text-xs text-red-500">{errors.respName.message}</p>}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="respCpf">CPF do Responsável *</Label>
-                      <Controller
-                        name="respCpf"
-                        control={control}
-                        render={({ field }) => (
-                          <Input 
-                            {...field}
-                            id="respCpf" 
-                            placeholder="000.000.000-00" 
-                            maxLength={14}
-                            onChange={(e) => {
-                              handleCpfChange(e, "respCpf");
-                            }}
-                            className={errors.respCpf ? "border-red-500" : ""} 
-                          />
-                        )}
-                      />
-                      {errors.respCpf && <p className="text-xs text-red-500">{errors.respCpf.message}</p>}
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="respWhatsapp">WhatsApp / Telefone *</Label>
-                      <Controller
-                        name="respWhatsapp"
-                        control={control}
-                        render={({ field }) => (
-                          <Input 
-                            {...field}
-                            id="respWhatsapp" 
-                            placeholder="(00) 00000-0000" 
-                            maxLength={15}
-                            onChange={(e) => {
-                              handlePhoneChange(e, "respWhatsapp");
-                            }}
-                            className={errors.respWhatsapp ? "border-red-500" : ""} 
-                          />
-                        )}
-                      />
-                      {errors.respWhatsapp && <p className="text-xs text-red-500">{errors.respWhatsapp.message}</p>}
-                    </div>
-                  </div>
-
-                  {respUploadError && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mt-4 flex items-center">
-                      <Info className="w-5 h-5 mr-2" />
-                      {respUploadError}
-                    </div>
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h2 className="text-xl font-bold text-slate-800">Dados Do Responsável</h2>
+                  {guardians.length < 3 && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        appendGuardian({ name: "", cpf: "", whatsapp: "" });
+                        setRespDocStates(prev => [...prev, "idle"]);
+                        setRespDocFiles(prev => [...prev, null]);
+                        setRespUploadErrors(prev => [...prev, ""]);
+                      }}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Adicionar outro
+                    </Button>
                   )}
+                </div>
+                
+                <div className="space-y-10">
+                  {guardians.map((field, index) => (
+                    <div key={field.id} className="space-y-6 relative">
+                      {index > 0 && (
+                        <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                          <h3 className="font-semibold text-slate-600">Responsável {index + 1}</h3>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              removeGuardian(index);
+                              setRespDocStates(prev => prev.filter((_, i) => i !== index));
+                              setRespDocFiles(prev => prev.filter((_, i) => i !== index));
+                              setRespUploadErrors(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg flex items-center text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Remover
+                          </button>
+                        </div>
+                      )}
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor={`guardians.${index}.name`}>Nome Completo *</Label>
+                          <Input 
+                            id={`guardians.${index}.name`} 
+                            placeholder="Nome e Sobrenome do Responsável" 
+                            {...register(`guardians.${index}.name` as const)} 
+                            className={errors.guardians?.[index]?.name ? "border-red-500" : ""} 
+                          />
+                          {errors.guardians?.[index]?.name && <p className="text-xs text-red-500">{errors.guardians[index]?.name?.message}</p>}
+                        </div>
 
-                  <div className="pt-2">
-                    <Label className="block mb-2 font-medium">Documento com foto do responsável *</Label>
-                    <FileUploadCard 
-                      title="Documento Oficial" 
-                      description="RG, CNH, Passaporte etc." 
-                      variant={respDocState}
-                      fileName={respDocFile?.name}
-                      progress={100}
-                      onFileSelect={(f) => simulateUpload(f, setRespDocState, setRespDocFile)}
-                      onFileRemove={() => removeUpload(setRespDocState, setRespDocFile)}
-                    />
-                  </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <Label htmlFor={`guardians.${index}.cpf`}>CPF do Responsável *</Label>
+                            <Controller
+                              name={`guardians.${index}.cpf` as const}
+                              control={control}
+                              render={({ field }) => (
+                                <Input 
+                                  {...field}
+                                  id={`guardians.${index}.cpf`} 
+                                  placeholder="000.000.000-00" 
+                                  maxLength={14}
+                                  onChange={(e) => {
+                                    handleCpfChange(e, `guardians.${index}.cpf`);
+                                  }}
+                                  className={errors.guardians?.[index]?.cpf ? "border-red-500" : ""} 
+                                />
+                              )}
+                            />
+                            {errors.guardians?.[index]?.cpf && <p className="text-xs text-red-500">{errors.guardians[index]?.cpf?.message}</p>}
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor={`guardians.${index}.whatsapp`}>WhatsApp / Telefone *</Label>
+                            <Controller
+                              name={`guardians.${index}.whatsapp` as const}
+                              control={control}
+                              render={({ field }) => (
+                                <Input 
+                                  {...field}
+                                  id={`guardians.${index}.whatsapp`} 
+                                  placeholder="(00) 00000-0000" 
+                                  maxLength={15}
+                                  onChange={(e) => {
+                                    handlePhoneChange(e, `guardians.${index}.whatsapp`);
+                                  }}
+                                  className={errors.guardians?.[index]?.whatsapp ? "border-red-500" : ""} 
+                                />
+                              )}
+                            />
+                            {errors.guardians?.[index]?.whatsapp && <p className="text-xs text-red-500">{errors.guardians[index]?.whatsapp?.message}</p>}
+                          </div>
+                        </div>
+
+                        {respUploadErrors[index] && (
+                          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mt-4 flex items-center">
+                            <Info className="w-5 h-5 mr-2" />
+                            {respUploadErrors[index]}
+                          </div>
+                        )}
+
+                        <div className="pt-2">
+                          <Label className="block mb-2 font-medium">Documento com foto do responsável {index + 1} *</Label>
+                          <FileUploadCard 
+                            title="Documento Oficial" 
+                            description="RG, CNH, Passaporte etc." 
+                            variant={respDocStates[index] || "idle"}
+                            fileName={respDocFiles[index]?.name}
+                            progress={100}
+                            onFileSelect={(f) => simulateUpload(f, (state) => setRespDocStateAtIndex(index, state as UploadState), (file) => setRespDocFileAtIndex(index, file))}
+                            onFileRemove={() => removeUpload((state) => setRespDocStateAtIndex(index, state as UploadState), (file) => setRespDocFileAtIndex(index, file))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -765,7 +1034,7 @@ export default function RegisterDependentPage() {
                   control={control}
                   name="needsParking"
                   render={({ field }) => (
-                    <Switch id="needsParkingToggle" className={switchOverrideClasses} checked={field.value} onCheckedChange={(val) => {
+                    <Switch id="needsParkingToggle" className={switchOverrideClasses} checked={field.value ?? false} onCheckedChange={(val) => {
                       field.onChange(val);
                       if (val && vehicles.length === 0) {
                         appendVehicle({ brand: "", model: "", plate: "" });
@@ -790,20 +1059,38 @@ export default function RegisterDependentPage() {
                           </button>
                        </div>
                        
-                       <div className="space-y-3">
+                        <div className="space-y-3">
                          <div className="space-y-1">
                            <Label className="text-sm font-medium">Marca *</Label>
-                           <Input placeholder="Ex: Volkswagen" {...register(`vehicles.${index}.brand` as const)} />
+                           <select 
+                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                             value={watch(`vehicles.${index}.brand`)}
+                             onChange={(e) => handleBrandChange(e.target.value, index)}
+                           >
+                             <option value="">Selecione a marca...</option>
+                             {marcas.map(m => (
+                               <option key={m.codigo} value={m.nome}>{m.nome}</option>
+                             ))}
+                           </select>
                            {errors.vehicles?.[index]?.brand && <p className="text-xs text-red-500">{errors.vehicles[index]?.brand?.message}</p>}
                          </div>
                          <div className="space-y-1">
                            <Label className="text-sm font-medium">Modelo *</Label>
-                           <Input placeholder="Ex: Gol" {...register(`vehicles.${index}.model` as const)} />
+                           <select 
+                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                             {...register(`vehicles.${index}.model` as const)}
+                             disabled={!watch(`vehicles.${index}.brand`)}
+                           >
+                             <option value="">Selecione o modelo...</option>
+                             {modelsByVehicle[index]?.map(m => (
+                               <option key={m.codigo} value={m.nome}>{m.nome}</option>
+                             ))}
+                           </select>
                            {errors.vehicles?.[index]?.model && <p className="text-xs text-red-500">{errors.vehicles[index]?.model?.message}</p>}
                          </div>
                          <div className="space-y-1">
                            <Label className="text-sm font-medium">Placa *</Label>
-                           <Input placeholder="ABC-1234" {...register(`vehicles.${index}.plate` as const)} className="uppercase" />
+                           <Input placeholder="ABC-1234 ou ABC1D23" {...register(`vehicles.${index}.plate` as const)} maxLength={8} className="uppercase" />
                            {errors.vehicles?.[index]?.plate && <p className="text-xs text-red-500">{errors.vehicles[index]?.plate?.message}</p>}
                          </div>
                        </div>

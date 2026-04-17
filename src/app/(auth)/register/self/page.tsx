@@ -7,6 +7,7 @@ import * as z from "zod";
 import Link from "next/link";
 import { ChevronLeft, Info, Plus, Trash2, ArrowRight, CheckCircle2, ArrowLeft, MapPin, Home } from "lucide-react";
 import { useRouter } from "next/navigation";
+import marcas from "@/external/veiculos/marcas.json";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,7 @@ const reqStr = (msg: string) => z.string().min(1, msg);
 const vehicleSchema = z.object({
   brand: reqStr("Marca obrigatória").min(2, "Mínimo 2 caracteres"),
   model: reqStr("Modelo obrigatório").min(2, "Mínimo 2 caracteres"),
-  plate: reqStr("Placa obrigatória").regex(/^[a-zA-Z]{3}-?[0-9][A-Za-z0-9][0-9]{2}$/, "Placa inválida (ex: ABC-1234)"),
+  plate: reqStr("Placa obrigatória").regex(/^([a-zA-Z]{3}-?[0-9]{4}|[a-zA-Z]{3}[0-9][a-zA-Z][0-9]{2}|[a-zA-Z]{3}[0-9]{2}[a-zA-Z][0-9])$/, "Placa inválida (ex: ABC-1234 ou ABC1D23)"),
 });
 
 const formSchema = z.object({
@@ -37,6 +38,14 @@ const formSchema = z.object({
   whatsapp: reqStr("Telefone obrigatório").min(14, "Telefone incompleto"),
   email: reqStr("E-mail obrigatório").email("E-mail inválido"),
   healthIssues: z.array(z.string()).optional(),
+  healthObservations: z.string().optional(),
+  medicationContinuous: z.boolean().default(false),
+  medicationList: z.string().optional(),
+  medicationDuringClass: z.boolean().default(false),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  emergencyHealthPlan: z.string().optional(),
+  emergencyHospital: z.string().optional(),
   password: reqStr("Senha de acesso obrigatória").min(6, "No mínimo 6 caracteres"),
   confirmPassword: reqStr("Confirmação de senha obrigatória").min(1, "Confirme sua senha"),
   needsParking: z.boolean().default(false),
@@ -48,11 +57,23 @@ const formSchema = z.object({
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
 }).refine((data) => {
+  if (data.emergencyContactName && (!data.emergencyContactPhone || data.emergencyContactPhone.trim() === "")) return false;
+  return true;
+}, {
+  message: "Telefone de emergência obrigatório ao informar o acompanhante",
+  path: ["emergencyContactPhone"],
+}).refine((data) => {
   if (data.needsParking && (!data.vehicles || data.vehicles.length === 0)) return false;
   return true;
 }, {
   message: "Adicione ao menos 1 veículo",
   path: ["vehicles"],
+}).refine((data) => {
+  if (data.medicationContinuous && (!data.medicationList || data.medicationList.trim() === "")) return false;
+  return true;
+}, {
+  message: "Informe qual(is) medicamento(s)",
+  path: ["medicationList"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -75,6 +96,14 @@ export default function RegisterSelfPage() {
       password: "",
       confirmPassword: "",
       healthIssues: [],
+      healthObservations: "",
+      medicationContinuous: false,
+      medicationList: "",
+      medicationDuringClass: false,
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      emergencyHealthPlan: "",
+      emergencyHospital: "",
       needsParking: false,
       acceptTerms: false,
       acceptRules: false,
@@ -89,6 +118,26 @@ export default function RegisterSelfPage() {
     name: "vehicles",
   });
 
+  const [modelsByVehicle, setModelsByVehicle] = React.useState<Record<number, any[]>>({});
+
+  const handleBrandChange = async (brandName: string, index: number) => {
+    setValue(`vehicles.${index}.brand`, brandName);
+    setValue(`vehicles.${index}.model`, ""); // Reset model
+    
+    const brand = marcas.find(m => m.nome === brandName);
+    if (brand) {
+      try {
+        const data = await import(`@/external/veiculos/${brand.codigo}.json`);
+        setModelsByVehicle(prev => ({ ...prev, [index]: data.modelos }));
+      } catch (e) {
+        console.error("Error loading models:", e);
+        setModelsByVehicle(prev => ({ ...prev, [index]: [] }));
+      }
+    } else {
+      setModelsByVehicle(prev => ({ ...prev, [index]: [] }));
+    }
+  };
+
   const needsParking = watch("needsParking");
 
   // Formatters
@@ -101,12 +150,12 @@ export default function RegisterSelfPage() {
     setValue("cpf", value, { shouldValidate: true, shouldDirty: true });
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "whatsapp" | "emergencyContactPhone") => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
     value = value.replace(/(\d{2})(\d)/, "($1) $2");
     value = value.replace(/(\d{4,5})(\d{4})$/, "$1-$2");
-    setValue("whatsapp", value, { shouldValidate: true, shouldDirty: true });
+    setValue(fieldName, value, { shouldValidate: true, shouldDirty: true });
   };
 
   // File Upload states
@@ -184,7 +233,10 @@ export default function RegisterSelfPage() {
     } else if (currentStep === 3) {
       isStepValid = await trigger([
         "name", "cpf", "birthDate", "whatsapp", "email", 
-        "healthIssues", "password", "confirmPassword"
+        "healthIssues", "healthObservations",
+        "medicationContinuous", "medicationList", "medicationDuringClass",
+        "emergencyContactName", "emergencyContactPhone", "emergencyHealthPlan", "emergencyHospital",
+        "password", "confirmPassword"
       ]);
     } else if (currentStep === 4) {
       if (!needsParking) {
@@ -532,7 +584,7 @@ export default function RegisterSelfPage() {
                             placeholder="(00) 00000-0000" 
                             maxLength={15}
                             onChange={(e) => {
-                              handlePhoneChange(e);
+                              handlePhoneChange(e, "whatsapp");
                             }}
                             className={errors.whatsapp ? "border-red-500" : ""} 
                           />
@@ -569,7 +621,19 @@ export default function RegisterSelfPage() {
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Saúde</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Hipertensão", "Diabetes", "Problemas Cardíacos", "Asma", "Nenhuma condição"].map((item, i) => (
+                  {[
+                    "Hipertensão", 
+                    "Diabetes", 
+                    "Problemas Cardíacos", 
+                    "Asma", 
+                    "Epilepsia / convulsões",
+                    "Alergias (alimentares, medicamentos, picadas, etc.)",
+                    "Problemas respiratórios (além de asma)",
+                    "Problemas neurológicos",
+                    "Problemas ortopédicos (joelho, coluna, etc.)",
+                    "Transtornos psicológicos (ansiedade, TDAH, depressão)",
+                    "Deficiências (auditiva, visual, motora, intelectual)"
+                  ].map((item, i) => (
                     <div key={item} className="flex flex-row items-center space-x-3 text-sm">
                       <Controller
                         control={control}
@@ -595,6 +659,134 @@ export default function RegisterSelfPage() {
                       </Label>
                     </div>
                   ))}
+                </div>
+
+                <div className="space-y-1.5 mt-4">
+                  <Label htmlFor="healthObservations">Observações sobre a saúde</Label>
+                  <Controller
+                    name="healthObservations"
+                    control={control}
+                    render={({ field }) => (
+                       <textarea 
+                         id="healthObservations" 
+                         placeholder="Informe detalhes sobre as condições marcadas acima ou outras informações relevantes..." 
+                         className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                         {...field}
+                       />
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Uso de Medicamentos</h2>
+                <div className="space-y-4">
+                  <div className="flex flex-row items-center justify-between p-4 border rounded-xl border-slate-200 bg-slate-50/50">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="medicationContinuous" className="text-base font-semibold text-slate-800 cursor-pointer">Uso contínuo de medicamentos?</Label>
+                      <p className="text-sm text-muted-foreground">Informe se você utiliza medicação regularmente.</p>
+                    </div>
+                    <Controller
+                      control={control}
+                      name="medicationContinuous"
+                      render={({ field }) => (
+                        <Switch 
+                          id="medicationContinuous" 
+                          className={switchOverrideClasses} 
+                          checked={field.value ?? false} 
+                          onCheckedChange={field.onChange} 
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {watch("medicationContinuous") && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="medicationList">Qual(is)? *</Label>
+                        <Input 
+                          id="medicationList" 
+                          placeholder="Nome dos medicamentos" 
+                          {...register("medicationList")} 
+                          className={errors.medicationList ? "border-red-500" : ""}
+                        />
+                        {errors.medicationList && <p className="text-xs text-red-500">{errors.medicationList.message}</p>}
+                      </div>
+
+                      <div className="flex flex-row items-center justify-between p-4 border rounded-xl border-slate-200">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="medicationDuringClass" className="text-sm font-medium text-slate-800 cursor-pointer">Precisa tomar durante o período da aula?</Label>
+                        </div>
+                        <Controller
+                          control={control}
+                          name="medicationDuringClass"
+                          render={({ field }) => (
+                            <Switch 
+                              id="medicationDuringClass" 
+                              className={switchOverrideClasses} 
+                              checked={field.value ?? false} 
+                              onCheckedChange={field.onChange} 
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <h2 className="text-xl font-bold text-slate-800 border-b pb-2">Informações de Emergência</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyContactName">Nome do acompanhante (opcional)</Label>
+                    <Input 
+                      id="emergencyContactName" 
+                      placeholder="Nome completo do contato" 
+                      {...register("emergencyContactName")} 
+                      className={errors.emergencyContactName ? "border-red-500" : ""}
+                    />
+                    {errors.emergencyContactName && <p className="text-xs text-red-500">{errors.emergencyContactName.message}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyContactPhone">Telefone de emergência {watch("emergencyContactName") ? "*" : "(opcional)"}</Label>
+                    <Controller
+                      name="emergencyContactPhone"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          {...field}
+                          id="emergencyContactPhone" 
+                          placeholder="(00) 00000-0000" 
+                          maxLength={15}
+                          onChange={(e) => {
+                            handlePhoneChange(e, "emergencyContactPhone");
+                          }}
+                          className={errors.emergencyContactPhone ? "border-red-500" : ""} 
+                        />
+                      )}
+                    />
+                    {errors.emergencyContactPhone && <p className="text-xs text-red-500">{errors.emergencyContactPhone.message}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyHealthPlan">Convênio/plano de saúde (opcional)</Label>
+                    <Input 
+                      id="emergencyHealthPlan" 
+                      placeholder="Nome do plano, se houver" 
+                      {...register("emergencyHealthPlan")} 
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergencyHospital">Hospital de preferência (opcional)</Label>
+                    <Input 
+                      id="emergencyHospital" 
+                      placeholder="Nome do hospital preferencial" 
+                      {...register("emergencyHospital")} 
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -654,7 +846,7 @@ export default function RegisterSelfPage() {
                   control={control}
                   name="needsParking"
                   render={({ field }) => (
-                    <Switch id="needsParkingToggle" className={switchOverrideClasses} checked={field.value} onCheckedChange={(val) => {
+                    <Switch id="needsParkingToggle" className={switchOverrideClasses} checked={field.value ?? false} onCheckedChange={(val) => {
                       field.onChange(val);
                       if (val && vehicles.length === 0) {
                         appendVehicle({ brand: "", model: "", plate: "" });
@@ -679,20 +871,38 @@ export default function RegisterSelfPage() {
                           </button>
                        </div>
                        
-                       <div className="space-y-3">
+                        <div className="space-y-3">
                          <div className="space-y-1">
                            <Label className="text-sm font-medium">Marca *</Label>
-                           <Input placeholder="Ex: Volkswagen" {...register(`vehicles.${index}.brand` as const)} />
+                           <select 
+                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                             value={watch(`vehicles.${index}.brand`)}
+                             onChange={(e) => handleBrandChange(e.target.value, index)}
+                           >
+                             <option value="">Selecione a marca...</option>
+                             {marcas.map(m => (
+                               <option key={m.codigo} value={m.nome}>{m.nome}</option>
+                             ))}
+                           </select>
                            {errors.vehicles?.[index]?.brand && <p className="text-xs text-red-500">{errors.vehicles[index]?.brand?.message}</p>}
                          </div>
                          <div className="space-y-1">
                            <Label className="text-sm font-medium">Modelo *</Label>
-                           <Input placeholder="Ex: Gol" {...register(`vehicles.${index}.model` as const)} />
+                           <select 
+                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                             {...register(`vehicles.${index}.model` as const)}
+                             disabled={!watch(`vehicles.${index}.brand`)}
+                           >
+                             <option value="">Selecione o modelo...</option>
+                             {modelsByVehicle[index]?.map(m => (
+                               <option key={m.codigo} value={m.nome}>{m.nome}</option>
+                             ))}
+                           </select>
                            {errors.vehicles?.[index]?.model && <p className="text-xs text-red-500">{errors.vehicles[index]?.model?.message}</p>}
                          </div>
                          <div className="space-y-1">
                            <Label className="text-sm font-medium">Placa *</Label>
-                           <Input placeholder="ABC-1234" {...register(`vehicles.${index}.plate` as const)} className="uppercase" />
+                           <Input placeholder="ABC-1234 ou ABC1D23" {...register(`vehicles.${index}.plate` as const)} maxLength={8} className="uppercase" />
                            {errors.vehicles?.[index]?.plate && <p className="text-xs text-red-500">{errors.vehicles[index]?.plate?.message}</p>}
                          </div>
                        </div>
