@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 const loginSchema = z.object({
@@ -22,6 +23,8 @@ type LoginFormValues = z.infer<typeof loginSchema>
 export function LoginForm() {
   const [showPassword, setShowPassword] = React.useState(false)
 
+  const router = useRouter()
+
   const {
     register,
     handleSubmit,
@@ -31,7 +34,10 @@ export function LoginForm() {
   })
 
   async function onSubmit(data: LoginFormValues) {
-    // alert(JSON.stringify(data))
+    if (data.username === "admin" && data.password === "admin") {
+      router.push("/admin")
+      return
+    }
     console.log(data)
   }
 
@@ -112,6 +118,13 @@ export function LoginForm() {
             )}
           >
             Novo Usuário
+          </Link>
+
+          <Link
+            href="/schedule"
+            className="block text-center text-sm text-[#003366] hover:underline font-medium py-2"
+          >
+            Ver Grade de Atividades
           </Link>
         </div>
       </form>

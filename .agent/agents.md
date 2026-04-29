@@ -221,9 +221,14 @@ Background jobs (e.g., enrollment processing)
 Notification system
 Reporting dashboards
 
-Do not implement prematurely.
+17. UI Patterns & Components
 
-17. Agent Behavior Mode
+### Confirmation & Messaging
+- **NEVER** use native browser `alert()` or `confirm()`. These break the premium UX.
+- **ALWAYS** use the `ConfirmationModal` component (`@/components/ui/confirmation-modal`).
+- **Types**: Use `danger` for destructive actions (e.g., delete), `success` for completions, `warning` for important notices, and `question` for standard decisions.
+
+18. Agent Behavior Mode
 
 Default behavior mode:
 

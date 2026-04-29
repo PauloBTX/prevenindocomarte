@@ -340,13 +340,12 @@ export default function RegisterDependentPage() {
         {/* Header Success */}
         <div className="w-full bg-white h-16 shadow-xs flex items-center px-4 md:px-8 border-b">
           <div className="max-w-2xl w-full mx-auto flex items-center gap-4">
-            <button 
-              type="button" 
-              onClick={() => router.push("/")} 
+            <Link 
+              href="/login"
               className="p-2 text-[#002855] hover:bg-slate-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-            </button>
+            </Link>
             <h1 className="text-[#002855] font-bold tracking-widest text-sm md:text-base uppercase">Prevenindo com Arte</h1>
           </div>
         </div>
@@ -427,7 +426,7 @@ export default function RegisterDependentPage() {
               type="button" 
               title="Voltar"
               onClick={() => {
-                if(currentStep === 1) router.back();
+                if(currentStep === 1) router.push("/login");
                 else handlePrevStep();
               }} 
               className="p-2 hover:bg-white/10 rounded-full transition-colors flex items-center justify-center justify-self-start"
@@ -437,14 +436,13 @@ export default function RegisterDependentPage() {
             
             <h1 className="text-xl md:text-2xl font-bold tracking-wide text-center">Cadastro Para Dependente</h1>
 
-            <button 
-              type="button" 
+            <Link 
+              href="/login"
               title="Voltar ao Login"
-              onClick={() => router.push("/login")} 
               className="p-2 hover:bg-white/10 rounded-full transition-colors flex items-center justify-center justify-self-end text-white"
             >
               <Home className="w-6 h-6" />
-            </button>
+            </Link>
           </div>
           <div className="flex justify-center sm:justify-end">
             <div className="text-sm font-medium whitespace-nowrap opacity-80">
