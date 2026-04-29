@@ -19,5 +19,9 @@ export default async function StudentValidationPage({
 }) {
   const { id } = await params
 
-  return <StudentValidationView id={id} />
+  return (
+    <React.Suspense fallback={<div>Carregando...</div>}>
+      <StudentValidationView id={id} />
+    </React.Suspense>
+  )
 }
